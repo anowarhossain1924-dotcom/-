@@ -1,0 +1,242 @@
+<svg width="400" height="440" viewBox="0 0 400 440" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    {/* Top curved path for school name (clockwise) */}
+    <path
+      id="topTextPath"
+      d="M 50,200 A 150,150 0 1,1 350,200"
+      fill="none"
+    />
+    {/* Bottom curved path for address (counter-clockwise so text is upright) */}
+    <path
+      id="bottomTextPath"
+      d="M 50,200 A 150,150 0 0,0 350,200"
+      fill="none"
+    />
+    {/* Ribbon path for "জ্ঞানই শক্তি" */}
+    <path
+      id="ribbonTextPath"
+      d="M 100,380 Q 200,366 300,380"
+      fill="none"
+    />
+  </defs>
+
+  {/* Outer Circle Ring: light yellow background with blue border */}
+  <circle cx="200" cy="200" r="180" fill="#fffbeb" stroke="#1e3a8a" strokeWidth="4" />
+  
+  {/* Inner Circle: white background with blue border */}
+  <circle cx="200" cy="200" r="125" fill="#ffffff" stroke="#1e3a8a" strokeWidth="3" />
+
+  {/* Top curved text: "আদর্শ শিশু কানন স্কুল" in red */}
+  <text
+    fill="#dc2626"
+    fontSize="26"
+    fontWeight="bold"
+    fontFamily="'Hind Siliguri', 'Kalpurush', 'Noto Sans Bengali', Arial, sans-serif"
+    letterSpacing="0.5"
+  >
+    <textPath href="#topTextPath" startOffset="50%" textAnchor="middle">
+      আদর্শ শিশু কানন স্কুল
+    </textPath>
+  </text>
+
+  {/* Bottom curved text: "কাশিম বাজার, সুন্দরগঞ্জ, গাইবান্ধা" in black */}
+  <text
+    fill="#0f172a"
+    fontSize="19"
+    fontWeight="bold"
+    fontFamily="'Hind Siliguri', 'Kalpurush', 'Noto Sans Bengali', Arial, sans-serif"
+    letterSpacing="0.2"
+  >
+    <textPath href="#bottomTextPath" startOffset="50%" textAnchor="middle">
+      কাশিম বাজার, সুন্দরগঞ্জ, গাইবান্ধা
+    </textPath>
+  </text>
+
+  {/* Red stars on left and right */}
+  {/* Left Star */}
+  <g transform="translate(42, 200)">
+    <polygon
+      points="0,-10 3,-3 10,-3 5,1 7,8 0,4 -7,8 -5,1 -10,-3 -3,-3"
+      fill="#dc2626"
+      stroke="#1e3a8a"
+      strokeWidth="1"
+    />
+  </g>
+  {/* Right Star */}
+  <g transform="translate(358, 200)">
+    <polygon
+      points="0,-10 3,-3 10,-3 5,1 7,8 0,4 -7,8 -5,1 -10,-3 -3,-3"
+      fill="#dc2626"
+      stroke="#1e3a8a"
+      strokeWidth="1"
+    />
+  </g>
+
+  {/* --- CENTER ELEMENTS --- */}
+
+  {/* Book */}
+  {/* Left Page background */}
+  <path
+    d="M 200,250 Q 155,215 110,225 L 110,175 Q 155,165 200,200 Z"
+    fill="#ffffff"
+    stroke="#1d4ed8"
+    strokeWidth="3.5"
+    strokeLinejoin="round"
+  />
+  {/* Right Page background */}
+  <path
+    d="M 200,250 Q 245,215 290,225 L 290,175 Q 245,165 200,200 Z"
+    fill="#ffffff"
+    stroke="#1d4ed8"
+    strokeWidth="3.5"
+    strokeLinejoin="round"
+  />
+  {/* Center page separator */}
+  <line x1="200" y1="200" x2="200" y2="250" stroke="#1d4ed8" strokeWidth="2.5" />
+
+  {/* Bengali letters on left page (অ - black, আ - purple) */}
+  <text
+    x="155"
+    y="196"
+    fill="#000000"
+    fontSize="24"
+    fontWeight="bold"
+    fontFamily="'Hind Siliguri', 'Kalpurush', 'Noto Sans Bengali', Arial, sans-serif"
+    textAnchor="middle"
+  >
+    অ
+  </text>
+  <text
+    x="155"
+    y="230"
+    fill="#7c3aed"
+    fontSize="24"
+    fontWeight="bold"
+    fontFamily="'Hind Siliguri', 'Kalpurush', 'Noto Sans Bengali', Arial, sans-serif"
+    textAnchor="middle"
+  >
+    আ
+  </text>
+
+  {/* Bengali numbers on right page (১ - red, ২ - blue) */}
+  <text
+    x="245"
+    y="196"
+    fill="#dc2626"
+    fontSize="24"
+    fontWeight="bold"
+    fontFamily="'Hind Siliguri', 'Kalpurush', 'Noto Sans Bengali', Arial, sans-serif"
+    textAnchor="middle"
+  >
+    ১
+  </text>
+  <text
+    x="245"
+    y="230"
+    fill="#2563eb"
+    fontSize="24"
+    fontWeight="bold"
+    fontFamily="'Hind Siliguri', 'Kalpurush', 'Noto Sans Bengali', Arial, sans-serif"
+    textAnchor="middle"
+  >
+    ২
+  </text>
+
+  {/* Blue candle in the center above the book */}
+  <rect x="194" y="148" width="12" height="38" rx="2" fill="#2563eb" stroke="#1d4ed8" strokeWidth="1" />
+  {/* Wick */}
+  <line x1="200" y1="148" x2="200" y2="140" stroke="#000000" strokeWidth="2" />
+  {/* Red-orange flame */}
+  {/* Outer flame */}
+  <path
+    d="M 200,141 C 193,133 194,118 200,108 C 206,118 207,133 200,141 Z"
+    fill="#ea580c"
+  />
+  {/* Inner flame (glowing core) */}
+  <path
+    d="M 200,139 C 196,134 196,125 200,118 C 204,125 204,134 200,139 Z"
+    fill="#facc15"
+  />
+
+  {/* Golden radiating sun rays from the candle flame */}
+  <g stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round">
+    <line x1="200" y1="98" x2="200" y2="88" />
+    <line x1="184" y1="104" x2="175" y2="95" />
+    <line x1="171" y1="117" x2="161" y2="110" />
+    <line x1="166" y1="134" x2="155" y2="130" />
+    
+    <line x1="216" y1="104" x2="225" y2="95" />
+    <line x1="229" y1="117" x2="239" y2="110" />
+    <line x1="234" y1="134" x2="245" y2="130" />
+  </g>
+
+  {/* Green letters A and B on sides of the candle */}
+  <text
+    x="155"
+    y="156"
+    fill="#16a34a"
+    fontSize="26"
+    fontWeight="bold"
+    fontFamily="Arial, sans-serif"
+    textAnchor="middle"
+  >
+    A
+  </text>
+  <text
+    x="245"
+    y="156"
+    fill="#16a34a"
+    fontSize="26"
+    fontWeight="bold"
+    fontFamily="Arial, sans-serif"
+    textAnchor="middle"
+  >
+    B
+  </text>
+
+  {/* "স্থাপিত: ২০১১ইং" text below the book */}
+  <text
+    x="200"
+    y="285"
+    fill="#0f172a"
+    fontSize="20"
+    fontWeight="bold"
+    fontFamily="'Hind Siliguri', 'Kalpurush', 'Noto Sans Bengali', Arial, sans-serif"
+    textAnchor="middle"
+  >
+    স্থাপিত: ২০১১ইং
+  </text>
+
+  {/* --- GREEN RIBBON WITH BENGALI TEXT: "জ্ঞানই শক্তি" --- */}
+  {/* Left ribbon tail */}
+  <path d="M 90,352 L 50,375 L 90,398 Z" fill="#15803d" stroke="#14532d" strokeWidth="1.5" />
+  {/* Fold connector (shadow) */}
+  <path d="M 90,352 L 105,354 L 105,395 L 90,398 Z" fill="#14532d" />
+  
+  {/* Right ribbon tail */}
+  <path d="M 310,352 L 350,375 L 310,398 Z" fill="#15803d" stroke="#14532d" strokeWidth="1.5" />
+  {/* Fold connector (shadow) */}
+  <path d="M 310,352 L 295,354 L 295,395 L 310,398 Z" fill="#14532d" />
+
+  {/* Main Banner body */}
+  <path
+    d="M 80,355 Q 200,340 320,355 L 310,405 Q 200,390 90,405 Z"
+    fill="#16a34a"
+    stroke="#15803d"
+    strokeWidth="2"
+    strokeLinejoin="round"
+  />
+
+  {/* Curved text inside the ribbon body: "জ্ঞানই শক্তি" in white */}
+  <text
+    fill="#ffffff"
+    fontSize="21"
+    fontWeight="extrabold"
+    fontFamily="'Hind Siliguri', 'Kalpurush', 'Noto Sans Bengali', Arial, sans-serif"
+    letterSpacing="1"
+  >
+    <textPath href="#ribbonTextPath" startOffset="50%" textAnchor="middle">
+      জ্ঞানই শক্তি
+    </textPath>
+  </text>
+</svg>

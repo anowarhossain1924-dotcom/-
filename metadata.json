@@ -1,0 +1,6 @@
+{
+  "name": "আদর্শ শিশু কানন স্কুল",
+  "description": "কাশিম বাজার, সুন্দরগঞ্জ, গাইবান্ধার আদর্শ শিশু কানন স্কুলের অফিসিয়াল ওয়েবসাইট",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
