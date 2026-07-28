@@ -27,6 +27,16 @@ import {
 } from './lib/initialData';
 
 import { 
+  subscribeNotices, 
+  subscribeClassRoutines, 
+  subscribeExamRoutines, 
+  subscribeApplications, 
+  subscribeBanners, 
+  subscribeSchoolInfo, 
+  saveApplicationToFirestore 
+} from './lib/firebase';
+
+import { 
   GraduationCap, 
   CalendarDays, 
   Clock, 
@@ -43,82 +53,32 @@ export default function App() {
   const [currentView, setView] = useState<string>('home');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
 
-  // --- STATE PERSISTENCE ---
-  const [notices, setNotices] = useState<Notice[]>(() => {
-    const saved = localStorage.getItem('ask_notices');
-    return saved ? JSON.parse(saved) : DEFAULT_NOTICES;
-  });
+  // --- FIRESTORE REALTIME STATE ---
+  const [notices, setNotices] = useState<Notice[]>(DEFAULT_NOTICES);
+  const [classRoutines, setClassRoutines] = useState<RoutineItem[]>(DEFAULT_CLASS_ROUTINES);
+  const [examRoutines, setExamRoutines] = useState<ExamRoutineItem[]>(DEFAULT_EXAM_ROUTINES);
+  const [applications, setApplications] = useState<AdmissionApplication[]>(DEFAULT_APPLICATIONS);
+  const [banners, setBanners] = useState<BannerSlide[]>(DEFAULT_BANNERS);
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(DEFAULT_SCHOOL_INFO);
 
-  const [classRoutines, setClassRoutines] = useState<RoutineItem[]>(() => {
-    const saved = localStorage.getItem('ask_class_routines');
-    return saved ? JSON.parse(saved) : DEFAULT_CLASS_ROUTINES;
-  });
-
-  const [examRoutines, setExamRoutines] = useState<ExamRoutineItem[]>(() => {
-    const saved = localStorage.getItem('ask_exam_routines');
-    return saved ? JSON.parse(saved) : DEFAULT_EXAM_ROUTINES;
-  });
-
-  const [applications, setApplications] = useState<AdmissionApplication[]>(() => {
-    const saved = localStorage.getItem('ask_applications');
-    return saved ? JSON.parse(saved) : DEFAULT_APPLICATIONS;
-  });
-
-  const [banners, setBanners] = useState<BannerSlide[]>(() => {
-    const saved = localStorage.getItem('ask_banners');
-    return saved ? JSON.parse(saved) : DEFAULT_BANNERS;
-  });
-
-  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(() => {
-    const saved = localStorage.getItem('ask_school_info');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.about && parsed.about.includes('২০১৯')) {
-          parsed.about = parsed.about.replace(/২০১৯/g, '২০১১');
-        }
-        if (parsed.history && parsed.history.includes('২০১৯')) {
-          parsed.history = parsed.history.replace(/২০১৯/g, '২০১১');
-        }
-        // Migrate old phone numbers to the new one
-        if (!parsed.contactPhone || parsed.contactPhone === '01712345678') {
-          parsed.contactPhone = '01924535589';
-        }
-        if (!parsed.whatsappNumber || parsed.whatsappNumber === '8801700000000') {
-          parsed.whatsappNumber = '8801924535589';
-        }
-        return parsed;
-      } catch (e) {
-        return DEFAULT_SCHOOL_INFO;
-      }
-    }
-    return DEFAULT_SCHOOL_INFO;
-  });
-
-  // Save changes to localStorage
+  // Subscribe to Firestore database for real-time live sync across devices
   useEffect(() => {
-    localStorage.setItem('ask_notices', JSON.stringify(notices));
-  }, [notices]);
+    const unsubNotices = subscribeNotices(setNotices, DEFAULT_NOTICES);
+    const unsubClassRoutines = subscribeClassRoutines(setClassRoutines, DEFAULT_CLASS_ROUTINES);
+    const unsubExamRoutines = subscribeExamRoutines(setExamRoutines, DEFAULT_EXAM_ROUTINES);
+    const unsubApps = subscribeApplications(setApplications, DEFAULT_APPLICATIONS);
+    const unsubBanners = subscribeBanners(setBanners, DEFAULT_BANNERS);
+    const unsubSchoolInfo = subscribeSchoolInfo(setSchoolInfo, DEFAULT_SCHOOL_INFO);
 
-  useEffect(() => {
-    localStorage.setItem('ask_class_routines', JSON.stringify(classRoutines));
-  }, [classRoutines]);
-
-  useEffect(() => {
-    localStorage.setItem('ask_exam_routines', JSON.stringify(examRoutines));
-  }, [examRoutines]);
-
-  useEffect(() => {
-    localStorage.setItem('ask_applications', JSON.stringify(applications));
-  }, [applications]);
-
-  useEffect(() => {
-    localStorage.setItem('ask_banners', JSON.stringify(banners));
-  }, [banners]);
-
-  useEffect(() => {
-    localStorage.setItem('ask_school_info', JSON.stringify(schoolInfo));
-  }, [schoolInfo]);
+    return () => {
+      unsubNotices();
+      unsubClassRoutines();
+      unsubExamRoutines();
+      unsubApps();
+      unsubBanners();
+      unsubSchoolInfo();
+    };
+  }, []);
 
 
   // --- HANDLERS ---
@@ -130,6 +90,7 @@ export default function App() {
       status: 'pending'
     };
     setApplications(prev => [newApplication, ...prev]);
+    saveApplicationToFirestore(newApplication);
   };
 
   const navigateToAdmin = () => {

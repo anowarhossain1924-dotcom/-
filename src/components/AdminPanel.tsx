@@ -26,6 +26,19 @@ import {
   Download
 } from 'lucide-react';
 import Logo from './Logo';
+import { 
+  saveNoticeToFirestore, 
+  deleteNoticeFromFirestore, 
+  saveClassRoutineToFirestore, 
+  deleteClassRoutineFromFirestore, 
+  saveExamRoutineToFirestore, 
+  deleteExamRoutineFromFirestore, 
+  saveApplicationToFirestore, 
+  deleteApplicationFromFirestore, 
+  saveBannerToFirestore, 
+  deleteBannerFromFirestore, 
+  saveSchoolInfoToFirestore 
+} from '../lib/firebase';
 
 interface AdminPanelProps {
   notices: Notice[];
@@ -96,6 +109,13 @@ export default function AdminPanel({
 
   // Detailed Application Viewer
   const [viewingApp, setViewingApp] = useState<AdmissionApplication | null>(null);
+
+  // New Banner form state
+  const [newBannerForm, setNewBannerForm] = useState({
+    title: '',
+    subtitle: '',
+    imageUrl: ''
+  });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,14 +288,16 @@ export default function AdminPanel({
     e.preventDefault();
     if (editingNotice) {
       // Edit existing
-      setNotices(prev => prev.map(n => n.id === editingNotice.id ? {
-        ...n,
+      const updated: Notice = {
+        ...editingNotice,
         title: noticeForm.title,
         content: noticeForm.content,
         isPinned: noticeForm.isPinned,
         image: noticeForm.image,
         published: noticeForm.published
-      } : n));
+      };
+      setNotices(prev => prev.map(n => n.id === editingNotice.id ? updated : n));
+      saveNoticeToFirestore(updated);
       setEditingNotice(null);
     } else {
       // Create new
@@ -290,6 +312,7 @@ export default function AdminPanel({
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
       };
       setNotices(prev => [newNotice, ...prev]);
+      saveNoticeToFirestore(newNotice);
     }
     // Reset form
     setNoticeForm({ title: '', content: '', isPinned: false, image: '', published: true });
@@ -309,24 +332,36 @@ export default function AdminPanel({
   const deleteNotice = (id: string) => {
     if (confirm('আপনি কি এই নোটিশটি মুছে ফেলতে চান?')) {
       setNotices(prev => prev.filter(n => n.id !== id));
+      deleteNoticeFromFirestore(id);
     }
   };
 
   const togglePinNotice = (id: string) => {
-    setNotices(prev => prev.map(n => n.id === id ? { ...n, isPinned: !n.isPinned } : n));
+    const noticeToToggle = notices.find(n => n.id === id);
+    if (noticeToToggle) {
+      const updated = { ...noticeToToggle, isPinned: !noticeToToggle.isPinned };
+      setNotices(prev => prev.map(n => n.id === id ? updated : n));
+      saveNoticeToFirestore(updated);
+    }
   };
 
   // ----- ADMISSION ACTIONS -----
   const updateAppStatus = (id: string, status: 'approved' | 'rejected') => {
-    setApplications(prev => prev.map(app => app.id === id ? { ...app, status } : app));
-    if (viewingApp && viewingApp.id === id) {
-      setViewingApp(prev => prev ? { ...prev, status } : null);
+    const appToUpdate = applications.find(app => app.id === id);
+    if (appToUpdate) {
+      const updated = { ...appToUpdate, status };
+      setApplications(prev => prev.map(app => app.id === id ? updated : app));
+      saveApplicationToFirestore(updated);
+      if (viewingApp && viewingApp.id === id) {
+        setViewingApp(updated);
+      }
     }
   };
 
   const deleteApplication = (id: string) => {
     if (confirm('আপনি কি এই আবেদনটি তালিকা থেকে মুছে ফেলতে চান?')) {
       setApplications(prev => prev.filter(app => app.id !== id));
+      deleteApplicationFromFirestore(id);
       if (viewingApp?.id === id) setViewingApp(null);
     }
   };
@@ -339,11 +374,13 @@ export default function AdminPanel({
       ...classRoutineForm
     };
     setClassRoutines(prev => [...prev, newItem]);
+    saveClassRoutineToFirestore(newItem);
     setClassRoutineForm(prev => ({ ...prev, subject: '', teacherName: '', time: '', room: '' }));
   };
 
   const deleteClassRoutine = (id: string) => {
     setClassRoutines(prev => prev.filter(r => r.id !== id));
+    deleteClassRoutineFromFirestore(id);
   };
 
   const addExamRoutine = (e: React.FormEvent) => {
@@ -353,21 +390,76 @@ export default function AdminPanel({
       ...examRoutineForm
     };
     setExamRoutines(prev => [...prev, newItem]);
+    saveExamRoutineToFirestore(newItem);
     setExamRoutineForm(prev => ({ ...prev, subject: '', date: '', day: 'শনিবার', time: '', room: '' }));
   };
 
   const deleteExamRoutine = (id: string) => {
     setExamRoutines(prev => prev.filter(r => r.id !== id));
+    deleteExamRoutineFromFirestore(id);
   };
 
   // ----- SETTINGS / GENERAL ACTIONS -----
   const handleSettingsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setSchoolInfo(prev => ({ ...prev, [name]: value }));
+    const updatedInfo = { ...schoolInfo, [name]: value };
+    setSchoolInfo(updatedInfo);
+    saveSchoolInfoToFirestore(updatedInfo);
   };
 
   const handleBannerChange = (id: string, field: 'title' | 'subtitle' | 'imageUrl', value: string) => {
-    setBanners(prev => prev.map(b => b.id === id ? { ...b, [field]: value } : b));
+    const bannerToUpdate = banners.find(b => b.id === id);
+    if (bannerToUpdate) {
+      const updated = { ...bannerToUpdate, [field]: value };
+      setBanners(prev => prev.map(b => b.id === id ? updated : b));
+      saveBannerToFirestore(updated);
+    }
+  };
+
+  const handleNewBannerImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewBannerForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSlideImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleBannerChange(id, 'imageUrl', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddBanner = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBannerForm.imageUrl) {
+      alert('দয়া করে একটি ছবি আপলোড করুন অথবা ছবির ইউআরএল দিন।');
+      return;
+    }
+    const newSlide: BannerSlide = {
+      id: 'banner-' + Date.now(),
+      title: newBannerForm.title || '',
+      subtitle: newBannerForm.subtitle || '',
+      imageUrl: newBannerForm.imageUrl
+    };
+    setBanners(prev => [...prev, newSlide]);
+    saveBannerToFirestore(newSlide);
+    setNewBannerForm({ title: '', subtitle: '', imageUrl: '' });
+  };
+
+  const handleDeleteBanner = (id: string) => {
+    if (confirm('আপনি কি এই স্লাইডার ব্যানারটি মুছে ফেলতে চান?')) {
+      setBanners(prev => prev.filter(b => b.id !== id));
+      deleteBannerFromFirestore(id);
+    }
   };
 
 
@@ -1038,50 +1130,167 @@ export default function AdminPanel({
 
       {/* -------------------- TAB 4: BANNERS -------------------- */}
       {activeTab === 'banners' && (
-        <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 space-y-6">
-          <h4 className="text-lg font-bold text-blue-950 border-b border-slate-100 pb-2 mb-4">হোমপেজ স্লাইডার ব্যানার ব্যবস্থাপনা</h4>
+        <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 space-y-8">
+          <div className="border-b border-slate-100 pb-4 mb-6">
+            <h4 className="text-lg font-bold text-blue-950">হোমপেজ স্লাইডার ব্যানার ব্যবস্থাপনা</h4>
+            <p className="text-xs text-slate-500 mt-1">এখানে আপনি স্লাইড ব্যানারে ইচ্ছামত নতুন ছবি, শিরোনাম ও বিবরণ যুক্ত করতে পারেন বা বিদ্যমান স্লাইডগুলো পরিবর্তন/মুছে ফেলতে পারেন।</p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {banners.map((b, idx) => (
-              <div key={b.id} className="border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col justify-between bg-slate-50/50">
-                <div className="relative h-32 bg-slate-900">
-                  <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
-                  <span className="absolute top-2 left-2 px-2 py-0.5 bg-amber-500 text-blue-950 text-xs font-black rounded">স্লাইড {idx + 1}</span>
+          {/* Form to Add New Banner Slide */}
+          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+            <h5 className="text-sm font-bold text-blue-950 flex items-center gap-2">
+              <Plus className="text-blue-600" size={18} />
+              নতুন স্লাইড ব্যানার যুক্ত করুন
+            </h5>
+            
+            <form onSubmit={handleAddBanner} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-gray-700">ব্যানার শিরোনাম (Title)</label>
+                  <input
+                    type="text"
+                    value={newBannerForm.title}
+                    onChange={(e) => setNewBannerForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="যেমন: আদর্শ শিশু কানন স্কুল এ স্বাগতম"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
-                
-                <div className="p-4 space-y-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">ইমেজ ইউআরএল (Image URL)</label>
-                    <input
-                      type="text"
-                      value={b.imageUrl}
-                      onChange={(e) => handleBannerChange(b.id, 'imageUrl', e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-xs bg-white"
-                    />
-                  </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">ব্যানার শিরোনাম</label>
-                    <input
-                      type="text"
-                      value={b.title}
-                      onChange={(e) => handleBannerChange(b.id, 'title', e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-xs bg-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">ব্যানার উপ-শিরোনাম</label>
-                    <textarea
-                      rows={2}
-                      value={b.subtitle}
-                      onChange={(e) => handleBannerChange(b.id, 'subtitle', e.target.value)}
-                      className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-xs bg-white"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-gray-700">ব্যানার উপ-শিরোনাম / বিবরণ (Subtitle)</label>
+                  <input
+                    type="text"
+                    value={newBannerForm.subtitle}
+                    onChange={(e) => setNewBannerForm(prev => ({ ...prev, subtitle: e.target.value }))}
+                    placeholder="যেমন: সুশিক্ষাই আমাদের একমাত্র লক্ষ্য ও উদ্দেশ্য।"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
-            ))}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-gray-700">ছবি আপলোড করুন (Upload Image)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleNewBannerImageUpload}
+                    className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-950 hover:file:bg-blue-100 cursor-pointer"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-gray-700">অথবা ছবির লিংক দিন (Image URL)</label>
+                  <input
+                    type="text"
+                    value={newBannerForm.imageUrl}
+                    onChange={(e) => setNewBannerForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {newBannerForm.imageUrl && (
+                <div className="space-y-1">
+                  <span className="block text-xs font-bold text-gray-500">ছবি প্রিভিউ:</span>
+                  <div className="relative h-40 w-full md:w-1/2 rounded-xl overflow-hidden border border-slate-200">
+                    <img src={newBannerForm.imageUrl} alt="New Slide Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <button
+                      type="button"
+                      onClick={() => setNewBannerForm(prev => ({ ...prev, imageUrl: '' }))}
+                      className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full text-xs hover:bg-red-700 transition-colors shadow-sm"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+              >
+                <Plus size={14} />
+                নতুন ব্যানার যুক্ত করুন
+              </button>
+            </form>
+          </div>
+
+          {/* List of Existing Banners */}
+          <div className="space-y-4">
+            <h5 className="text-sm font-bold text-blue-950 border-b border-slate-100 pb-2">বর্তমান ব্যানার স্লাইডগুলোর তালিকা ({banners.length} টি)</h5>
+            
+            {banners.length === 0 ? (
+              <div className="text-center py-8 text-gray-400 text-xs">
+                কোন ব্যানার স্লাইড নেই। দয়া করে উপরে একটি নতুন ব্যানার যুক্ত করুন।
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {banners.map((b, idx) => (
+                  <div key={b.id} className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between bg-slate-50/50 hover:shadow-md transition-shadow">
+                    <div className="relative h-36 bg-slate-900">
+                      <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
+                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                        <span className="px-2 py-0.5 bg-blue-900 text-white text-[10px] font-bold rounded shadow-sm">স্লাইড {idx + 1}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteBanner(b.id)}
+                        className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-xs transition-colors shadow-sm cursor-pointer"
+                        title="স্লাইডটি মুছে ফেলুন"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                    
+                    <div className="p-4 space-y-3 bg-white border-t border-slate-100 flex-1 flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">ছবি পরিবর্তন করুন (আপলোড)</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleSlideImageUpload(b.id, e)}
+                            className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-blue-50 file:text-blue-950 hover:file:bg-blue-100 cursor-pointer"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">অথবা ইমেজ ইউআরএল (Image URL)</label>
+                          <input
+                            type="text"
+                            value={b.imageUrl}
+                            onChange={(e) => handleBannerChange(b.id, 'imageUrl', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">ব্যানার শিরোনাম</label>
+                          <input
+                            type="text"
+                            value={b.title}
+                            onChange={(e) => handleBannerChange(b.id, 'title', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-500 font-bold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase mb-0.5">ব্যানার উপ-শিরোনাম</label>
+                          <textarea
+                            rows={2}
+                            value={b.subtitle}
+                            onChange={(e) => handleBannerChange(b.id, 'subtitle', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-xs bg-white focus:ring-1 focus:ring-blue-500 resize-none text-slate-600"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
