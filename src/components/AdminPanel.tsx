@@ -27,18 +27,19 @@ import {
 } from 'lucide-react';
 import Logo from './Logo';
 import { 
-  saveNoticeToFirestore, 
-  deleteNoticeFromFirestore, 
-  saveClassRoutineToFirestore, 
-  deleteClassRoutineFromFirestore, 
-  saveExamRoutineToFirestore, 
-  deleteExamRoutineFromFirestore, 
-  saveApplicationToFirestore, 
-  deleteApplicationFromFirestore, 
-  saveBannerToFirestore, 
-  deleteBannerFromFirestore, 
-  saveSchoolInfoToFirestore 
-} from '../lib/firebase';
+  saveNoticeToSupabase, 
+  deleteNoticeFromSupabase, 
+  saveClassRoutineToSupabase, 
+  deleteClassRoutineFromSupabase, 
+  saveExamRoutineToSupabase, 
+  deleteExamRoutineFromSupabase, 
+  saveApplicationToSupabase, 
+  deleteApplicationFromSupabase, 
+  saveBannerToSupabase, 
+  deleteBannerFromSupabase, 
+  saveSchoolInfoToSupabase,
+  uploadImageToSupabaseStorage
+} from '../lib/supabase';
 
 interface AdminPanelProps {
   notices: Notice[];
@@ -297,7 +298,7 @@ export default function AdminPanel({
         published: noticeForm.published
       };
       setNotices(prev => prev.map(n => n.id === editingNotice.id ? updated : n));
-      saveNoticeToFirestore(updated);
+      saveNoticeToSupabase(updated);
       setEditingNotice(null);
     } else {
       // Create new
@@ -312,27 +313,24 @@ export default function AdminPanel({
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
       };
       setNotices(prev => [newNotice, ...prev]);
-      saveNoticeToFirestore(newNotice);
+      saveNoticeToSupabase(newNotice);
     }
     // Reset form
     setNoticeForm({ title: '', content: '', isPinned: false, image: '', published: true });
   };
 
-  const handleNoticeImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNoticeImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNoticeForm(prev => ({ ...prev, image: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      const url = await uploadImageToSupabaseStorage(file, 'notices');
+      setNoticeForm(prev => ({ ...prev, image: url }));
     }
   };
 
   const deleteNotice = (id: string) => {
     if (confirm('আপনি কি এই নোটিশটি মুছে ফেলতে চান?')) {
       setNotices(prev => prev.filter(n => n.id !== id));
-      deleteNoticeFromFirestore(id);
+      deleteNoticeFromSupabase(id);
     }
   };
 
@@ -341,7 +339,7 @@ export default function AdminPanel({
     if (noticeToToggle) {
       const updated = { ...noticeToToggle, isPinned: !noticeToToggle.isPinned };
       setNotices(prev => prev.map(n => n.id === id ? updated : n));
-      saveNoticeToFirestore(updated);
+      saveNoticeToSupabase(updated);
     }
   };
 
@@ -351,7 +349,7 @@ export default function AdminPanel({
     if (appToUpdate) {
       const updated = { ...appToUpdate, status };
       setApplications(prev => prev.map(app => app.id === id ? updated : app));
-      saveApplicationToFirestore(updated);
+      saveApplicationToSupabase(updated);
       if (viewingApp && viewingApp.id === id) {
         setViewingApp(updated);
       }
@@ -361,7 +359,7 @@ export default function AdminPanel({
   const deleteApplication = (id: string) => {
     if (confirm('আপনি কি এই আবেদনটি তালিকা থেকে মুছে ফেলতে চান?')) {
       setApplications(prev => prev.filter(app => app.id !== id));
-      deleteApplicationFromFirestore(id);
+      deleteApplicationFromSupabase(id);
       if (viewingApp?.id === id) setViewingApp(null);
     }
   };
@@ -374,13 +372,13 @@ export default function AdminPanel({
       ...classRoutineForm
     };
     setClassRoutines(prev => [...prev, newItem]);
-    saveClassRoutineToFirestore(newItem);
+    saveClassRoutineToSupabase(newItem);
     setClassRoutineForm(prev => ({ ...prev, subject: '', teacherName: '', time: '', room: '' }));
   };
 
   const deleteClassRoutine = (id: string) => {
     setClassRoutines(prev => prev.filter(r => r.id !== id));
-    deleteClassRoutineFromFirestore(id);
+    deleteClassRoutineFromSupabase(id);
   };
 
   const addExamRoutine = (e: React.FormEvent) => {
@@ -390,13 +388,13 @@ export default function AdminPanel({
       ...examRoutineForm
     };
     setExamRoutines(prev => [...prev, newItem]);
-    saveExamRoutineToFirestore(newItem);
+    saveExamRoutineToSupabase(newItem);
     setExamRoutineForm(prev => ({ ...prev, subject: '', date: '', day: 'শনিবার', time: '', room: '' }));
   };
 
   const deleteExamRoutine = (id: string) => {
     setExamRoutines(prev => prev.filter(r => r.id !== id));
-    deleteExamRoutineFromFirestore(id);
+    deleteExamRoutineFromSupabase(id);
   };
 
   // ----- SETTINGS / GENERAL ACTIONS -----
@@ -404,37 +402,32 @@ export default function AdminPanel({
     const { name, value } = e.target;
     const updatedInfo = { ...schoolInfo, [name]: value };
     setSchoolInfo(updatedInfo);
-    saveSchoolInfoToFirestore(updatedInfo);
+    saveSchoolInfoToSupabase(updatedInfo);
   };
 
   const handleBannerChange = (id: string, field: 'title' | 'subtitle' | 'imageUrl', value: string) => {
     const bannerToUpdate = banners.find(b => b.id === id);
     if (bannerToUpdate) {
       const updated = { ...bannerToUpdate, [field]: value };
+      const index = banners.findIndex(b => b.id === id);
       setBanners(prev => prev.map(b => b.id === id ? updated : b));
-      saveBannerToFirestore(updated);
+      saveBannerToSupabase(updated, index);
     }
   };
 
-  const handleNewBannerImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewBannerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewBannerForm(prev => ({ ...prev, imageUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      const url = await uploadImageToSupabaseStorage(file, 'banners');
+      setNewBannerForm(prev => ({ ...prev, imageUrl: url }));
     }
   };
 
-  const handleSlideImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSlideImageUpload = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleBannerChange(id, 'imageUrl', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const url = await uploadImageToSupabaseStorage(file, 'banners');
+      handleBannerChange(id, 'imageUrl', url);
     }
   };
 
@@ -451,14 +444,14 @@ export default function AdminPanel({
       imageUrl: newBannerForm.imageUrl
     };
     setBanners(prev => [...prev, newSlide]);
-    saveBannerToFirestore(newSlide);
+    saveBannerToSupabase(newSlide, banners.length);
     setNewBannerForm({ title: '', subtitle: '', imageUrl: '' });
   };
 
   const handleDeleteBanner = (id: string) => {
     if (confirm('আপনি কি এই স্লাইডার ব্যানারটি মুছে ফেলতে চান?')) {
       setBanners(prev => prev.filter(b => b.id !== id));
-      deleteBannerFromFirestore(id);
+      deleteBannerFromSupabase(id);
     }
   };
 

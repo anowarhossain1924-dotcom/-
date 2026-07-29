@@ -33,8 +33,8 @@ import {
   subscribeApplications, 
   subscribeBanners, 
   subscribeSchoolInfo, 
-  saveApplicationToFirestore 
-} from './lib/firebase';
+  saveApplicationToSupabase 
+} from './lib/supabase';
 
 import { 
   GraduationCap, 
@@ -90,7 +90,7 @@ export default function App() {
       status: 'pending'
     };
     setApplications(prev => [newApplication, ...prev]);
-    saveApplicationToFirestore(newApplication);
+    saveApplicationToSupabase(newApplication);
   };
 
   const navigateToAdmin = () => {
