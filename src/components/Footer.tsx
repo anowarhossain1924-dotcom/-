@@ -24,7 +24,7 @@ export default function Footer({ info }: FooterProps) {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <div className="bg-white p-1 rounded-full shadow-inner ring-2 ring-amber-400">
-                <Logo size={55} />
+                <Logo size={55} logoUrl={info.logoUrl} />
               </div>
               <div>
                 <h4 className="text-lg font-bold text-white font-sans">আদর্শ শিশু কানন স্কুল</h4>

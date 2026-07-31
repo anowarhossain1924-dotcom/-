@@ -431,6 +431,22 @@ export default function AdminPanel({
     }
   };
 
+  const handleLogoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = await uploadImageToSupabaseStorage(file, 'logo');
+      const updatedInfo = { ...schoolInfo, logoUrl: url };
+      setSchoolInfo(updatedInfo);
+      saveSchoolInfoToSupabase(updatedInfo);
+    }
+  };
+
+  const resetToDefaultLogo = () => {
+    const updatedInfo = { ...schoolInfo, logoUrl: '' };
+    setSchoolInfo(updatedInfo);
+    saveSchoolInfoToSupabase(updatedInfo);
+  };
+
   const handleAddBanner = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBannerForm.imageUrl) {
@@ -1326,6 +1342,68 @@ export default function AdminPanel({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
+            {/* Logo Management Section */}
+            <div className="md:col-span-2 p-5 bg-blue-50/80 rounded-2xl border border-blue-200/80 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center space-x-2 text-blue-950">
+                  <Image size={22} className="text-blue-700" />
+                  <h5 className="font-extrabold text-base sm:text-lg">ওয়েবসাইট লোগো পরিবর্তন ও আপলোড (Website Logo Management)</h5>
+                </div>
+                {schoolInfo.logoUrl && (
+                  <button
+                    type="button"
+                    onClick={resetToDefaultLogo}
+                    className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer self-start sm:self-auto"
+                  >
+                    ডিফল্ট লোগোতে ফিরে যান
+                  </button>
+                )}
+              </div>
+              
+              <p className="text-xs text-gray-600 leading-relaxed">
+                অ্যাডমিন হিসেবে আপনি ডিভাইস থেকে যেকোনো কাস্টম লোগো আপলোড করতে পারেন। আপলোডকৃত লোগোটি Supabase Storage-এ সংরক্ষিত হবে এবং ওয়েবসাইটের হেডার ও ফুটারে সাথে সাথে রিয়েল-টাইমে আপডেট হয়ে স্থায়ী থাকবে।
+              </p>
+
+              <div className="flex flex-col md:flex-row items-center gap-6 bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+                <div className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-xl shrink-0">
+                  <span className="text-[11px] font-bold text-gray-500 mb-2">বর্তমান ওয়েবসাইট লোগো প্রিভিউ</span>
+                  <div className="bg-white p-2 rounded-full shadow-md ring-2 ring-amber-400">
+                    <Logo size={70} logoUrl={schoolInfo.logoUrl} />
+                  </div>
+                </div>
+
+                <div className="flex-1 space-y-3 w-full">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">ডিভাইস থেকে লোগো আপলোড করুন (Upload Image File)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoImageUpload}
+                      className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-900 file:text-white hover:file:bg-blue-800 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="relative flex items-center">
+                    <div className="flex-grow border-t border-gray-200"></div>
+                    <span className="flex-shrink mx-2 text-[10px] font-bold text-gray-400 uppercase">অথবা সরাসরি ইমেজের URL দিন</span>
+                    <div className="flex-grow border-t border-gray-200"></div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">লোগো ইমেজের লিঙ্ক (Logo Image URL)</label>
+                    <input
+                      type="text"
+                      name="logoUrl"
+                      value={schoolInfo.logoUrl || ''}
+                      onChange={handleSettingsChange}
+                      placeholder="https://example.com/logo.png"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white font-mono focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* WhatsApp configuration */}
             <div className="md:col-span-2 p-4 bg-emerald-50 rounded-xl border border-emerald-200/60 space-y-3">
               <div className="flex items-center space-x-2 text-emerald-800">

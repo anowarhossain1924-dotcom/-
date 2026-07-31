@@ -362,6 +362,7 @@ export function subscribeSchoolInfo(onUpdate: (data: SchoolInfo) => void, initia
     try {
       const { data, error } = await supabase.from('about').select('*').eq('id', 'main').single();
       const { data: contactData } = await supabase.from('contact').select('*').eq('id', 'main').single();
+      const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main').single();
 
       if (error || !data) {
         // Seed initial about & contact
@@ -380,6 +381,15 @@ export function subscribeSchoolInfo(onUpdate: (data: SchoolInfo) => void, initia
           email: initialDefault.contactEmail,
           whatsapp: initialDefault.whatsappNumber
         });
+        await supabase.from('settings').upsert({
+          id: 'main',
+          site_title: 'আদর্শ শিশু কানন স্কুল',
+          contact_phone: initialDefault.contactPhone,
+          contact_email: initialDefault.contactEmail,
+          whatsapp_number: initialDefault.whatsappNumber,
+          address: initialDefault.address,
+          logo_url: initialDefault.logoUrl || ''
+        });
         onUpdate(initialDefault);
       } else {
         onUpdate({
@@ -391,7 +401,8 @@ export function subscribeSchoolInfo(onUpdate: (data: SchoolInfo) => void, initia
           contactPhone: contactData?.phone || initialDefault.contactPhone,
           contactEmail: contactData?.email || initialDefault.contactEmail,
           whatsappNumber: contactData?.whatsapp || initialDefault.whatsappNumber,
-          address: contactData?.address || initialDefault.address
+          address: contactData?.address || initialDefault.address,
+          logoUrl: settingsData?.logo_url || ''
         });
       }
     } catch (err) {
@@ -415,9 +426,17 @@ export function subscribeSchoolInfo(onUpdate: (data: SchoolInfo) => void, initia
     })
     .subscribe();
 
+  const channelSettings = supabase
+    .channel('settings_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
+      fetchAndSync();
+    })
+    .subscribe();
+
   return () => {
     supabase.removeChannel(channelAbout);
     supabase.removeChannel(channelContact);
+    supabase.removeChannel(channelSettings);
   };
 }
 
@@ -506,6 +525,7 @@ export async function saveSchoolInfoToSupabase(info: SchoolInfo) {
     contact_email: info.contactEmail,
     whatsapp_number: info.whatsappNumber,
     address: info.address,
+    logo_url: info.logoUrl || '',
     updated_at: new Date().toISOString()
   });
 

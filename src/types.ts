@@ -69,4 +69,5 @@ export interface SchoolInfo {
   contactEmail: string;
   whatsappNumber: string; // Bengali text config
   address: string;
+  logoUrl?: string;
 }

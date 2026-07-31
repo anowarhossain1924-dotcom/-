@@ -111,6 +111,11 @@ export default function App() {
         setView={setView} 
         onAdminClick={navigateToAdmin} 
         isAdminLoggedIn={isAdminLoggedIn} 
+        logoUrl={schoolInfo.logoUrl}
+        notices={notices}
+        classRoutines={classRoutines}
+        examRoutines={examRoutines}
+        schoolInfo={schoolInfo}
       />
 
       {/* Main Content View Switcher */}
