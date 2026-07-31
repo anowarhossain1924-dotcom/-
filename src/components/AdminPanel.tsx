@@ -23,7 +23,10 @@ import {
   Image,
   Eye,
   Info,
-  Download
+  Download,
+  Save,
+  CheckCircle,
+  X
 } from 'lucide-react';
 import Logo from './Logo';
 import { 
@@ -117,6 +120,9 @@ export default function AdminPanel({
     subtitle: '',
     imageUrl: ''
   });
+
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -402,7 +408,23 @@ export default function AdminPanel({
     const { name, value } = e.target;
     const updatedInfo = { ...schoolInfo, [name]: value };
     setSchoolInfo(updatedInfo);
-    saveSchoolInfoToSupabase(updatedInfo);
+  };
+
+  const handleSaveSettings = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      await saveSchoolInfoToSupabase(schoolInfo);
+      setSaveSuccessMsg('সকল কাস্টমাইজেশন ও সেটিংস তথ্য সফলভাবে সেভ করা হয়েছে!');
+      setTimeout(() => {
+        setSaveSuccessMsg('');
+      }, 4000);
+    } catch (err) {
+      console.error(err);
+      setSaveSuccessMsg('সেভ করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    } finally {
+      setIsSavingSettings(false);
+    }
   };
 
   const handleBannerChange = (id: string, field: 'title' | 'subtitle' | 'imageUrl', value: string) => {
@@ -1307,7 +1329,36 @@ export default function AdminPanel({
       {/* -------------------- TAB 5: SCHOOL SETTINGS -------------------- */}
       {activeTab === 'settings' && (
         <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 space-y-6">
-          <h4 className="text-lg font-bold text-blue-950 border-b border-slate-100 pb-2 mb-4">স্কুল সাধারণ তথ্য ও যোগাযোগের সেটিংস</h4>
+          
+          {/* Settings Header with Save Button */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h4 className="text-lg font-bold text-blue-950">স্কুল সাধারণ তথ্য ও যোগাযোগের সেটিংস</h4>
+              <p className="text-xs text-gray-500 mt-0.5">আপনার প্রয়োজনমতো ওয়েবসাইট তথ্য ও লোগো পরিমার্জন করুন এবং সেভ বাটনে ক্লিক করুন।</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleSaveSettings()}
+              disabled={isSavingSettings}
+              className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer shrink-0"
+            >
+              <Save size={18} />
+              <span>{isSavingSettings ? 'সংরক্ষণ করা হচ্ছে...' : 'কাস্টমাইজেশন সেভ করুন (Save Changes)'}</span>
+            </button>
+          </div>
+
+          {/* Success Notification Banner */}
+          {saveSuccessMsg && (
+            <div className="p-4 bg-emerald-600 text-white rounded-xl shadow-lg flex items-center justify-between font-bold text-xs sm:text-sm animate-fade-in border border-emerald-400">
+              <div className="flex items-center space-x-2">
+                <CheckCircle size={20} className="shrink-0" />
+                <span>{saveSuccessMsg}</span>
+              </div>
+              <button onClick={() => setSaveSuccessMsg('')} className="text-white hover:text-emerald-100 p-1 cursor-pointer">
+                <X size={16} />
+              </button>
+            </div>
+          )}
 
           {/* Logo Section */}
           <div className="p-5 bg-gradient-to-br from-slate-50 to-amber-50/30 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center gap-6">
@@ -1509,11 +1560,22 @@ export default function AdminPanel({
 
           </div>
 
-          <div className="p-4 bg-blue-50 text-blue-900 rounded-xl text-xs flex items-start space-x-2">
-            <Info size={16} className="shrink-0 mt-0.5" />
-            <p className="font-semibold">
-              সকল পরিবর্তন তাৎক্ষণিকভাবে হোমপেজ এবং সংশ্লিষ্ট পেজগুলোতে আপডেট হবে। কোন কোড পরিবর্তনের প্রয়োজন নেই।
-            </p>
+          <div className="pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="p-4 bg-blue-50 text-blue-900 rounded-xl text-xs flex items-start space-x-2 flex-1 w-full">
+              <Info size={16} className="shrink-0 mt-0.5 text-blue-600" />
+              <p className="font-semibold">
+                সকল তথ্য ও লোগো কাস্টমাইজেশন সম্পন্ন হলে "সব তথ্য সংরক্ষণ করুন" বাটনে ক্লিক করুন। নতুন তথ্য সাথে সাথে ডাটাবেজে আপডেট ও সংরক্ষিত হয়ে যাবে।
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleSaveSettings()}
+              disabled={isSavingSettings}
+              className="w-full sm:w-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg hover:shadow-xl active:scale-95 cursor-pointer shrink-0"
+            >
+              <Save size={20} />
+              <span>{isSavingSettings ? 'সংরক্ষণ করা হচ্ছে...' : 'সব তথ্য সংরক্ষণ করুন (Save All Settings)'}</span>
+            </button>
           </div>
         </div>
       )}

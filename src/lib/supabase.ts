@@ -197,18 +197,65 @@ function mapBannerToDb(item: BannerSlide) {
 // REALTIME SUBSCRIPTIONS WITH AUTOMATIC SEEDING
 // ============================================================
 
+// ============================================================
+// DUAL-LAYER PERSISTENCE HELPERS (LOCAL STORAGE + SUPABASE)
+// ============================================================
+function getLocalCache<T>(key: string): T | null {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setLocalCache<T>(key: string, data: T) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.warn('LocalStorage quota or save error:', e);
+  }
+}
+
+const STORAGE_KEYS = {
+  NOTICES: 'adarsha_notices_v2',
+  CLASS_ROUTINES: 'adarsha_class_routines_v2',
+  EXAM_ROUTINES: 'adarsha_exam_routines_v2',
+  APPLICATIONS: 'adarsha_admissions_v2',
+  BANNERS: 'adarsha_banners_v2',
+  SCHOOL_INFO: 'adarsha_school_info_v2'
+};
+
+// ============================================================
+// REALTIME SUBSCRIBERS (SUPABASE + LOCAL STORAGE FALLBACK)
+// ============================================================
+
 export function subscribeNotices(onUpdate: (data: Notice[]) => void, initialDefaults: Notice[]) {
+  // Load local cache immediately for instant render without delay
+  const cached = getLocalCache<Notice[]>(STORAGE_KEYS.NOTICES);
+  if (cached && cached.length > 0) {
+    onUpdate(cached);
+  } else {
+    onUpdate(initialDefaults);
+  }
+
   const fetchAndSync = async () => {
     try {
       const { data, error } = await supabase.from('notices').select('*').order('created_at', { ascending: false });
-      if (error || !data || data.length === 0) {
-        if (initialDefaults.length > 0) {
+      if (!error && data && data.length > 0) {
+        const mapped = data.map(mapNoticeFromDb);
+        setLocalCache(STORAGE_KEYS.NOTICES, mapped);
+        onUpdate(mapped);
+      } else if (error || !data || data.length === 0) {
+        const currentCache = getLocalCache<Notice[]>(STORAGE_KEYS.NOTICES);
+        if (currentCache && currentCache.length > 0) {
+          onUpdate(currentCache);
+        } else if (initialDefaults.length > 0) {
           const payload = initialDefaults.map(mapNoticeToDb);
           await supabase.from('notices').upsert(payload);
+          setLocalCache(STORAGE_KEYS.NOTICES, initialDefaults);
           onUpdate(initialDefaults);
         }
-      } else {
-        onUpdate(data.map(mapNoticeFromDb));
       }
     } catch (err) {
       console.error('Error fetching notices from Supabase:', err);
@@ -230,17 +277,30 @@ export function subscribeNotices(onUpdate: (data: Notice[]) => void, initialDefa
 }
 
 export function subscribeClassRoutines(onUpdate: (data: RoutineItem[]) => void, initialDefaults: RoutineItem[]) {
+  const cached = getLocalCache<RoutineItem[]>(STORAGE_KEYS.CLASS_ROUTINES);
+  if (cached && cached.length > 0) {
+    onUpdate(cached);
+  } else {
+    onUpdate(initialDefaults);
+  }
+
   const fetchAndSync = async () => {
     try {
       const { data, error } = await supabase.from('class_routines').select('*');
-      if (error || !data || data.length === 0) {
-        if (initialDefaults.length > 0) {
+      if (!error && data && data.length > 0) {
+        const mapped = data.map(mapClassRoutineFromDb);
+        setLocalCache(STORAGE_KEYS.CLASS_ROUTINES, mapped);
+        onUpdate(mapped);
+      } else if (error || !data || data.length === 0) {
+        const currentCache = getLocalCache<RoutineItem[]>(STORAGE_KEYS.CLASS_ROUTINES);
+        if (currentCache && currentCache.length > 0) {
+          onUpdate(currentCache);
+        } else if (initialDefaults.length > 0) {
           const payload = initialDefaults.map(mapClassRoutineToDb);
           await supabase.from('class_routines').upsert(payload);
+          setLocalCache(STORAGE_KEYS.CLASS_ROUTINES, initialDefaults);
           onUpdate(initialDefaults);
         }
-      } else {
-        onUpdate(data.map(mapClassRoutineFromDb));
       }
     } catch (err) {
       console.error('Error fetching class_routines from Supabase:', err);
@@ -262,17 +322,30 @@ export function subscribeClassRoutines(onUpdate: (data: RoutineItem[]) => void, 
 }
 
 export function subscribeExamRoutines(onUpdate: (data: ExamRoutineItem[]) => void, initialDefaults: ExamRoutineItem[]) {
+  const cached = getLocalCache<ExamRoutineItem[]>(STORAGE_KEYS.EXAM_ROUTINES);
+  if (cached && cached.length > 0) {
+    onUpdate(cached);
+  } else {
+    onUpdate(initialDefaults);
+  }
+
   const fetchAndSync = async () => {
     try {
       const { data, error } = await supabase.from('exam_routines').select('*');
-      if (error || !data || data.length === 0) {
-        if (initialDefaults.length > 0) {
+      if (!error && data && data.length > 0) {
+        const mapped = data.map(mapExamRoutineFromDb);
+        setLocalCache(STORAGE_KEYS.EXAM_ROUTINES, mapped);
+        onUpdate(mapped);
+      } else if (error || !data || data.length === 0) {
+        const currentCache = getLocalCache<ExamRoutineItem[]>(STORAGE_KEYS.EXAM_ROUTINES);
+        if (currentCache && currentCache.length > 0) {
+          onUpdate(currentCache);
+        } else if (initialDefaults.length > 0) {
           const payload = initialDefaults.map(mapExamRoutineToDb);
           await supabase.from('exam_routines').upsert(payload);
+          setLocalCache(STORAGE_KEYS.EXAM_ROUTINES, initialDefaults);
           onUpdate(initialDefaults);
         }
-      } else {
-        onUpdate(data.map(mapExamRoutineFromDb));
       }
     } catch (err) {
       console.error('Error fetching exam_routines from Supabase:', err);
@@ -294,17 +367,30 @@ export function subscribeExamRoutines(onUpdate: (data: ExamRoutineItem[]) => voi
 }
 
 export function subscribeApplications(onUpdate: (data: AdmissionApplication[]) => void, initialDefaults: AdmissionApplication[]) {
+  const cached = getLocalCache<AdmissionApplication[]>(STORAGE_KEYS.APPLICATIONS);
+  if (cached && cached.length > 0) {
+    onUpdate(cached);
+  } else {
+    onUpdate(initialDefaults);
+  }
+
   const fetchAndSync = async () => {
     try {
       const { data, error } = await supabase.from('admissions').select('*').order('created_at', { ascending: false });
-      if (error || !data || data.length === 0) {
-        if (initialDefaults.length > 0) {
+      if (!error && data && data.length > 0) {
+        const mapped = data.map(mapApplicationFromDb);
+        setLocalCache(STORAGE_KEYS.APPLICATIONS, mapped);
+        onUpdate(mapped);
+      } else if (error || !data || data.length === 0) {
+        const currentCache = getLocalCache<AdmissionApplication[]>(STORAGE_KEYS.APPLICATIONS);
+        if (currentCache && currentCache.length > 0) {
+          onUpdate(currentCache);
+        } else if (initialDefaults.length > 0) {
           const payload = initialDefaults.map(mapApplicationToDb);
           await supabase.from('admissions').upsert(payload);
+          setLocalCache(STORAGE_KEYS.APPLICATIONS, initialDefaults);
           onUpdate(initialDefaults);
         }
-      } else {
-        onUpdate(data.map(mapApplicationFromDb));
       }
     } catch (err) {
       console.error('Error fetching admissions from Supabase:', err);
@@ -326,17 +412,30 @@ export function subscribeApplications(onUpdate: (data: AdmissionApplication[]) =
 }
 
 export function subscribeBanners(onUpdate: (data: BannerSlide[]) => void, initialDefaults: BannerSlide[]) {
+  const cached = getLocalCache<BannerSlide[]>(STORAGE_KEYS.BANNERS);
+  if (cached && cached.length > 0) {
+    onUpdate(cached);
+  } else {
+    onUpdate(initialDefaults);
+  }
+
   const fetchAndSync = async () => {
     try {
       const { data, error } = await supabase.from('hero').select('*').order('sort_order', { ascending: true });
-      if (error || !data || data.length === 0) {
-        if (initialDefaults.length > 0) {
+      if (!error && data && data.length > 0) {
+        const mapped = data.map(mapBannerFromDb);
+        setLocalCache(STORAGE_KEYS.BANNERS, mapped);
+        onUpdate(mapped);
+      } else if (error || !data || data.length === 0) {
+        const currentCache = getLocalCache<BannerSlide[]>(STORAGE_KEYS.BANNERS);
+        if (currentCache && currentCache.length > 0) {
+          onUpdate(currentCache);
+        } else if (initialDefaults.length > 0) {
           const payload = initialDefaults.map((b, idx) => ({ ...mapBannerToDb(b), sort_order: idx }));
           await supabase.from('hero').upsert(payload);
+          setLocalCache(STORAGE_KEYS.BANNERS, initialDefaults);
           onUpdate(initialDefaults);
         }
-      } else {
-        onUpdate(data.map(mapBannerFromDb));
       }
     } catch (err) {
       console.error('Error fetching hero banners from Supabase:', err);
@@ -358,55 +457,49 @@ export function subscribeBanners(onUpdate: (data: BannerSlide[]) => void, initia
 }
 
 export function subscribeSchoolInfo(onUpdate: (data: SchoolInfo) => void, initialDefault: SchoolInfo) {
+  // Load local cache immediately so refresh preserves custom settings instantly
+  const cached = getLocalCache<SchoolInfo>(STORAGE_KEYS.SCHOOL_INFO);
+  if (cached) {
+    onUpdate(cached);
+  } else {
+    onUpdate(initialDefault);
+  }
+
   const fetchAndSync = async () => {
     try {
-      const { data, error } = await supabase.from('about').select('*').eq('id', 'main').single();
-      const { data: contactData } = await supabase.from('contact').select('*').eq('id', 'main').single();
-      const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main').single();
+      const { data: aboutData, error: aboutError } = await supabase.from('about').select('*').eq('id', 'main').maybeSingle();
+      const { data: contactData } = await supabase.from('contact').select('*').eq('id', 'main').maybeSingle();
+      const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main').maybeSingle();
 
-      if (error || !data) {
-        // Seed initial about & contact
-        await supabase.from('about').upsert({
-          id: 'main',
-          about_text: initialDefault.about,
-          history_text: initialDefault.history,
-          mission_text: initialDefault.mission,
-          vision_text: initialDefault.vision,
-          facilities: initialDefault.facilities
-        });
-        await supabase.from('contact').upsert({
-          id: 'main',
-          address: initialDefault.address,
-          phone: initialDefault.contactPhone,
-          email: initialDefault.contactEmail,
-          whatsapp: initialDefault.whatsappNumber
-        });
-        await supabase.from('settings').upsert({
-          id: 'main',
-          site_title: 'আদর্শ শিশু কানন স্কুল',
-          contact_phone: initialDefault.contactPhone,
-          contact_email: initialDefault.contactEmail,
-          whatsapp_number: initialDefault.whatsappNumber,
-          address: initialDefault.address,
-          logo_url: initialDefault.logoUrl || ''
-        });
-        onUpdate(initialDefault);
-      } else {
-        onUpdate({
-          about: data.about_text || initialDefault.about,
-          history: data.history_text || initialDefault.history,
-          mission: data.mission_text || initialDefault.mission,
-          vision: data.vision_text || initialDefault.vision,
-          facilities: data.facilities || initialDefault.facilities,
-          contactPhone: contactData?.phone || initialDefault.contactPhone,
-          contactEmail: contactData?.email || initialDefault.contactEmail,
-          whatsappNumber: contactData?.whatsapp || initialDefault.whatsappNumber,
-          address: contactData?.address || initialDefault.address,
-          logoUrl: settingsData?.logo_url || ''
-        });
+      const currentCache = getLocalCache<SchoolInfo>(STORAGE_KEYS.SCHOOL_INFO);
+
+      if (aboutData || contactData || settingsData) {
+        const updated: SchoolInfo = {
+          about: aboutData?.about_text || currentCache?.about || initialDefault.about,
+          history: aboutData?.history_text || currentCache?.history || initialDefault.history,
+          mission: aboutData?.mission_text || currentCache?.mission || initialDefault.mission,
+          vision: aboutData?.vision_text || currentCache?.vision || initialDefault.vision,
+          facilities: aboutData?.facilities || currentCache?.facilities || initialDefault.facilities,
+          contactPhone: contactData?.phone || currentCache?.contactPhone || initialDefault.contactPhone,
+          contactEmail: contactData?.email || currentCache?.contactEmail || initialDefault.contactEmail,
+          whatsappNumber: contactData?.whatsapp || currentCache?.whatsappNumber || initialDefault.whatsappNumber,
+          address: contactData?.address || currentCache?.address || initialDefault.address,
+          logoUrl: settingsData?.logo_url !== undefined ? settingsData.logo_url : (currentCache?.logoUrl || '')
+        };
+        setLocalCache(STORAGE_KEYS.SCHOOL_INFO, updated);
+        onUpdate(updated);
+      } else if (aboutError) {
+        // If error fetching from DB, use local storage cache if present
+        if (currentCache) {
+          onUpdate(currentCache);
+        }
       }
     } catch (err) {
       console.error('Error fetching school info from Supabase:', err);
+      const currentCache = getLocalCache<SchoolInfo>(STORAGE_KEYS.SCHOOL_INFO);
+      if (currentCache) {
+        onUpdate(currentCache);
+      }
     }
   };
 
@@ -441,50 +534,90 @@ export function subscribeSchoolInfo(onUpdate: (data: SchoolInfo) => void, initia
 }
 
 // ============================================================
-// CRUD WRITERS (SUPABASE POSTGRES)
+// CRUD WRITERS (SUPABASE POSTGRES + LOCAL STORAGE SYNC)
 // ============================================================
 
 export async function saveNoticeToSupabase(notice: Notice) {
+  const current = getLocalCache<Notice[]>(STORAGE_KEYS.NOTICES) || [];
+  const idx = current.findIndex(n => n.id === notice.id);
+  const updated = idx >= 0 ? current.map(n => n.id === notice.id ? notice : n) : [notice, ...current];
+  setLocalCache(STORAGE_KEYS.NOTICES, updated);
+
   const { error } = await supabase.from('notices').upsert(mapNoticeToDb(notice));
   if (error) console.error('Supabase notice save error:', error.message);
 }
 
 export async function deleteNoticeFromSupabase(id: string) {
+  const current = getLocalCache<Notice[]>(STORAGE_KEYS.NOTICES) || [];
+  const updated = current.filter(n => n.id !== id);
+  setLocalCache(STORAGE_KEYS.NOTICES, updated);
+
   const { error } = await supabase.from('notices').delete().eq('id', id);
   if (error) console.error('Supabase notice delete error:', error.message);
 }
 
 export async function saveClassRoutineToSupabase(item: RoutineItem) {
+  const current = getLocalCache<RoutineItem[]>(STORAGE_KEYS.CLASS_ROUTINES) || [];
+  const idx = current.findIndex(r => r.id === item.id);
+  const updated = idx >= 0 ? current.map(r => r.id === item.id ? item : r) : [...current, item];
+  setLocalCache(STORAGE_KEYS.CLASS_ROUTINES, updated);
+
   const { error } = await supabase.from('class_routines').upsert(mapClassRoutineToDb(item));
   if (error) console.error('Supabase class routine save error:', error.message);
 }
 
 export async function deleteClassRoutineFromSupabase(id: string) {
+  const current = getLocalCache<RoutineItem[]>(STORAGE_KEYS.CLASS_ROUTINES) || [];
+  const updated = current.filter(r => r.id !== id);
+  setLocalCache(STORAGE_KEYS.CLASS_ROUTINES, updated);
+
   const { error } = await supabase.from('class_routines').delete().eq('id', id);
   if (error) console.error('Supabase class routine delete error:', error.message);
 }
 
 export async function saveExamRoutineToSupabase(item: ExamRoutineItem) {
+  const current = getLocalCache<ExamRoutineItem[]>(STORAGE_KEYS.EXAM_ROUTINES) || [];
+  const idx = current.findIndex(r => r.id === item.id);
+  const updated = idx >= 0 ? current.map(r => r.id === item.id ? item : r) : [...current, item];
+  setLocalCache(STORAGE_KEYS.EXAM_ROUTINES, updated);
+
   const { error } = await supabase.from('exam_routines').upsert(mapExamRoutineToDb(item));
   if (error) console.error('Supabase exam routine save error:', error.message);
 }
 
 export async function deleteExamRoutineFromSupabase(id: string) {
+  const current = getLocalCache<ExamRoutineItem[]>(STORAGE_KEYS.EXAM_ROUTINES) || [];
+  const updated = current.filter(r => r.id !== id);
+  setLocalCache(STORAGE_KEYS.EXAM_ROUTINES, updated);
+
   const { error } = await supabase.from('exam_routines').delete().eq('id', id);
   if (error) console.error('Supabase exam routine delete error:', error.message);
 }
 
 export async function saveApplicationToSupabase(appItem: AdmissionApplication) {
+  const current = getLocalCache<AdmissionApplication[]>(STORAGE_KEYS.APPLICATIONS) || [];
+  const updated = [appItem, ...current];
+  setLocalCache(STORAGE_KEYS.APPLICATIONS, updated);
+
   const { error } = await supabase.from('admissions').upsert(mapApplicationToDb(appItem));
   if (error) console.error('Supabase admission save error:', error.message);
 }
 
 export async function deleteApplicationFromSupabase(id: string) {
+  const current = getLocalCache<AdmissionApplication[]>(STORAGE_KEYS.APPLICATIONS) || [];
+  const updated = current.filter(a => a.id !== id);
+  setLocalCache(STORAGE_KEYS.APPLICATIONS, updated);
+
   const { error } = await supabase.from('admissions').delete().eq('id', id);
   if (error) console.error('Supabase admission delete error:', error.message);
 }
 
 export async function saveBannerToSupabase(banner: BannerSlide, index = 0) {
+  const current = getLocalCache<BannerSlide[]>(STORAGE_KEYS.BANNERS) || [];
+  const idx = current.findIndex(b => b.id === banner.id);
+  const updated = idx >= 0 ? current.map(b => b.id === banner.id ? banner : b) : [...current, banner];
+  setLocalCache(STORAGE_KEYS.BANNERS, updated);
+
   const dbData = {
     ...mapBannerToDb(banner),
     sort_order: index
@@ -494,42 +627,55 @@ export async function saveBannerToSupabase(banner: BannerSlide, index = 0) {
 }
 
 export async function deleteBannerFromSupabase(id: string) {
+  const current = getLocalCache<BannerSlide[]>(STORAGE_KEYS.BANNERS) || [];
+  const updated = current.filter(b => b.id !== id);
+  setLocalCache(STORAGE_KEYS.BANNERS, updated);
+
   const { error } = await supabase.from('hero').delete().eq('id', id);
   if (error) console.error('Supabase banner delete error:', error.message);
 }
 
 export async function saveSchoolInfoToSupabase(info: SchoolInfo) {
-  const { error: aboutErr } = await supabase.from('about').upsert({
-    id: 'main',
-    about_text: info.about,
-    history_text: info.history,
-    mission_text: info.mission,
-    vision_text: info.vision,
-    facilities: info.facilities,
-    updated_at: new Date().toISOString()
-  });
+  // 1. Immediately update Local Storage cache for fast local persistence
+  setLocalCache(STORAGE_KEYS.SCHOOL_INFO, info);
 
-  const { error: contactErr } = await supabase.from('contact').upsert({
-    id: 'main',
-    address: info.address,
-    phone: info.contactPhone,
-    email: info.contactEmail,
-    whatsapp: info.whatsappNumber,
-    updated_at: new Date().toISOString()
-  });
+  // 2. Persist to Supabase database tables
+  try {
+    const { error: aboutErr } = await supabase.from('about').upsert({
+      id: 'main',
+      about_text: info.about,
+      history_text: info.history,
+      mission_text: info.mission,
+      vision_text: info.vision,
+      facilities: info.facilities,
+      updated_at: new Date().toISOString()
+    });
 
-  const { error: settingsErr } = await supabase.from('settings').upsert({
-    id: 'main',
-    site_title: 'আদর্শ শিশু কানন স্কুল',
-    contact_phone: info.contactPhone,
-    contact_email: info.contactEmail,
-    whatsapp_number: info.whatsappNumber,
-    address: info.address,
-    logo_url: info.logoUrl || '',
-    updated_at: new Date().toISOString()
-  });
+    const { error: contactErr } = await supabase.from('contact').upsert({
+      id: 'main',
+      address: info.address,
+      phone: info.contactPhone,
+      email: info.contactEmail,
+      whatsapp: info.whatsappNumber,
+      updated_at: new Date().toISOString()
+    });
 
-  if (aboutErr || contactErr || settingsErr) {
-    console.error('Supabase school info update error:', aboutErr?.message || contactErr?.message || settingsErr?.message);
+    const { error: settingsErr } = await supabase.from('settings').upsert({
+      id: 'main',
+      site_title: 'আদর্শ শিশু কানন স্কুল',
+      contact_phone: info.contactPhone,
+      contact_email: info.contactEmail,
+      whatsapp_number: info.whatsappNumber,
+      address: info.address,
+      logo_url: info.logoUrl || '',
+      updated_at: new Date().toISOString()
+    });
+
+    if (aboutErr || contactErr || settingsErr) {
+      console.warn('Supabase DB save note:', aboutErr?.message || contactErr?.message || settingsErr?.message);
+    }
+  } catch (err) {
+    console.error('Failed to sync school info to Supabase DB:', err);
   }
 }
+
