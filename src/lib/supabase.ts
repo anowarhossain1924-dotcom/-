@@ -467,13 +467,19 @@ export function subscribeSchoolInfo(onUpdate: (data: SchoolInfo) => void, initia
 
   const fetchAndSync = async () => {
     try {
-      const { data: aboutData, error: aboutError } = await supabase.from('about').select('*').eq('id', 'main').maybeSingle();
-      const { data: contactData } = await supabase.from('contact').select('*').eq('id', 'main').maybeSingle();
-      const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 'main').maybeSingle();
+      const { data: aboutData } = await supabase.from('about').select('*').limit(1).maybeSingle();
+      const { data: contactData } = await supabase.from('contact').select('*').limit(1).maybeSingle();
+      
+      // Select settings row dynamically without hardcoding id requirement
+      const { data: settingsRows } = await supabase.from('settings').select('*').order('updated_at', { ascending: false }).limit(1);
+      const settingsData = settingsRows && settingsRows.length > 0 ? settingsRows[0] : null;
 
       const currentCache = getLocalCache<SchoolInfo>(STORAGE_KEYS.SCHOOL_INFO);
 
       if (aboutData || contactData || settingsData) {
+        const dbLogoUrl = settingsData ? (settingsData.logo_url ?? settingsData.logoUrl ?? null) : null;
+        const updatedLogoUrl = dbLogoUrl !== null ? dbLogoUrl : (currentCache?.logoUrl || initialDefault.logoUrl || '');
+
         const updated: SchoolInfo = {
           about: aboutData?.about_text || currentCache?.about || initialDefault.about,
           history: aboutData?.history_text || currentCache?.history || initialDefault.history,
@@ -484,15 +490,10 @@ export function subscribeSchoolInfo(onUpdate: (data: SchoolInfo) => void, initia
           contactEmail: contactData?.email || currentCache?.contactEmail || initialDefault.contactEmail,
           whatsappNumber: contactData?.whatsapp || currentCache?.whatsappNumber || initialDefault.whatsappNumber,
           address: contactData?.address || currentCache?.address || initialDefault.address,
-          logoUrl: settingsData?.logo_url !== undefined ? settingsData.logo_url : (currentCache?.logoUrl || '')
+          logoUrl: updatedLogoUrl
         };
         setLocalCache(STORAGE_KEYS.SCHOOL_INFO, updated);
         onUpdate(updated);
-      } else if (aboutError) {
-        // If error fetching from DB, use local storage cache if present
-        if (currentCache) {
-          onUpdate(currentCache);
-        }
       }
     } catch (err) {
       console.error('Error fetching school info from Supabase:', err);
@@ -660,19 +661,52 @@ export async function saveSchoolInfoToSupabase(info: SchoolInfo) {
       updated_at: new Date().toISOString()
     });
 
-    const { error: settingsErr } = await supabase.from('settings').upsert({
-      id: 'main',
-      site_title: 'আদর্শ শিশু কানন স্কুল',
-      contact_phone: info.contactPhone,
-      contact_email: info.contactEmail,
-      whatsapp_number: info.whatsappNumber,
-      address: info.address,
-      logo_url: info.logoUrl || '',
-      updated_at: new Date().toISOString()
-    });
+    // Save settings table reliably (check existing row first)
+    const logoVal = info.logoUrl || '';
+    const { data: existingSettingsRows } = await supabase.from('settings').select('*').limit(1);
+    const existingSetting = existingSettingsRows && existingSettingsRows.length > 0 ? existingSettingsRows[0] : null;
 
-    if (aboutErr || contactErr || settingsErr) {
-      console.warn('Supabase DB save note:', aboutErr?.message || contactErr?.message || settingsErr?.message);
+    if (existingSetting) {
+      const { error: settingsUpdateErr } = await supabase.from('settings').update({
+        site_title: 'আদর্শ শিশু কানন স্কুল',
+        contact_phone: info.contactPhone,
+        contact_email: info.contactEmail,
+        whatsapp_number: info.whatsappNumber,
+        address: info.address,
+        logo_url: logoVal,
+        updated_at: new Date().toISOString()
+      }).eq('id', existingSetting.id);
+
+      if (settingsUpdateErr) {
+        console.warn('Supabase settings update error:', settingsUpdateErr.message);
+      }
+    } else {
+      const { error: settingsUpsertErr } = await supabase.from('settings').upsert({
+        id: 'main',
+        site_title: 'আদর্শ শিশু কানন স্কুল',
+        contact_phone: info.contactPhone,
+        contact_email: info.contactEmail,
+        whatsapp_number: info.whatsappNumber,
+        address: info.address,
+        logo_url: logoVal,
+        updated_at: new Date().toISOString()
+      });
+
+      if (settingsUpsertErr) {
+        await supabase.from('settings').insert({
+          site_title: 'আদর্শ শিশু কানন স্কুল',
+          contact_phone: info.contactPhone,
+          contact_email: info.contactEmail,
+          whatsapp_number: info.whatsappNumber,
+          address: info.address,
+          logo_url: logoVal,
+          updated_at: new Date().toISOString()
+        });
+      }
+    }
+
+    if (aboutErr || contactErr) {
+      console.warn('Supabase DB save note:', aboutErr?.message || contactErr?.message);
     }
   } catch (err) {
     console.error('Failed to sync school info to Supabase DB:', err);

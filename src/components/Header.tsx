@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Logo from './Logo';
-import { Menu, X, Lock, Phone, Search, Bell, Calendar, Info, FileText, ChevronRight, Sparkles, BookOpen } from 'lucide-react';
+import { Menu, X, Lock, Phone, Search, Bell, Calendar, Info, FileText, ChevronRight, Sparkles, BookOpen, Sun, Moon } from 'lucide-react';
 import { Notice, RoutineItem, ExamRoutineItem, SchoolInfo } from '../types';
 
 interface HeaderProps {
@@ -13,6 +13,8 @@ interface HeaderProps {
   classRoutines?: RoutineItem[];
   examRoutines?: ExamRoutineItem[];
   schoolInfo?: SchoolInfo;
+  isDarkMode?: boolean;
+  toggleDarkMode?: () => void;
 }
 
 export default function Header({ 
@@ -24,7 +26,9 @@ export default function Header({
   notices = [],
   classRoutines = [],
   examRoutines = [],
-  schoolInfo
+  schoolInfo,
+  isDarkMode = false,
+  toggleDarkMode
 }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -357,6 +361,19 @@ export default function Header({
 
             <span className="h-6 w-px bg-blue-800 mx-1.5"></span>
 
+            {/* Theme Toggle Button (Desktop) */}
+            {toggleDarkMode && (
+              <button
+                type="button"
+                onClick={toggleDarkMode}
+                className="p-2 rounded-xl border border-blue-700/60 bg-blue-950/70 text-amber-400 hover:bg-amber-400 hover:text-blue-950 transition-all cursor-pointer shadow-sm flex items-center justify-center shrink-0 active:scale-95"
+                title={isDarkMode ? "লাইটিং থিমে সুইচ করুন (Light Mode)" : "ডার্ক মোডে সুইচ করুন (Dark Mode)"}
+                aria-label="Theme toggle"
+              >
+                {isDarkMode ? <Sun size={18} className="text-amber-300 animate-spin-slow" /> : <Moon size={18} className="text-amber-400" />}
+              </button>
+            )}
+
             {/* Admin Login Button */}
             <button
               onClick={() => {
@@ -378,6 +395,17 @@ export default function Header({
 
           {/* Mobile Right Action Controls */}
           <div className="lg:hidden flex items-center space-x-2">
+            {toggleDarkMode && (
+              <button
+                type="button"
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg border border-amber-400/40 text-amber-400 hover:bg-blue-800 focus:outline-none cursor-pointer"
+                title={isDarkMode ? "লাইট মোড" : "ডার্ক মোড"}
+                aria-label="Theme toggle mobile"
+              >
+                {isDarkMode ? <Sun size={18} className="text-amber-300" /> : <Moon size={18} className="text-amber-400" />}
+              </button>
+            )}
             <button
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
               className="p-2 rounded-lg border border-amber-400/40 text-amber-400 hover:bg-blue-800 focus:outline-none cursor-pointer"
@@ -495,7 +523,7 @@ export default function Header({
 
       {/* Mobile Drawer Navigation */}
       {isOpen && (
-        <div className="lg:hidden bg-blue-950 border-t border-blue-800 px-4 pt-2 pb-4 space-y-1 shadow-lg animate-fade-in">
+        <div className="lg:hidden bg-blue-950 border-t border-blue-800 px-4 pt-2 pb-4 space-y-2 shadow-lg animate-fade-in">
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -509,6 +537,25 @@ export default function Header({
               {item.label}
             </button>
           ))}
+
+          {toggleDarkMode && (
+            <button
+              type="button"
+              onClick={() => {
+                toggleDarkMode();
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-4 py-3 rounded-lg text-base font-semibold bg-blue-900/80 text-amber-400 hover:bg-blue-900 hover:text-white transition-all duration-200 cursor-pointer flex items-center justify-between border border-blue-800"
+            >
+              <span className="flex items-center space-x-2">
+                {isDarkMode ? <Sun size={18} className="text-amber-300" /> : <Moon size={18} className="text-amber-400" />}
+                <span>{isDarkMode ? 'লাইট মোড অন করুন' : 'ডার্ক মোড অন করুন'}</span>
+              </span>
+              <span className="text-xs bg-amber-400/20 px-2 py-0.5 rounded text-amber-300">
+                {isDarkMode ? 'Dark Active' : 'Light Active'}
+              </span>
+            </button>
+          )}
         </div>
       )}
     </header>

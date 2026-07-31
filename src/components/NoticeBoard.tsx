@@ -48,20 +48,20 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
   };
 
   return (
-    <div className={`w-full ${isHomepage ? 'bg-gradient-to-b from-blue-50/50 to-white py-12' : 'py-8'}`}>
+    <div className={`w-full ${isHomepage ? 'bg-gradient-to-b from-blue-50/50 to-white dark:from-slate-900/60 dark:to-slate-950 py-12' : 'py-8'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Notice Board Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 border-b border-gray-200 pb-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 border-b border-gray-200 dark:border-slate-800 pb-4">
           <div>
-            <div className="flex items-center space-x-2 text-blue-900 font-bold mb-1.5">
+            <div className="flex items-center space-x-2 text-blue-900 dark:text-amber-400 font-bold mb-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping"></span>
               <span className="text-sm tracking-wider uppercase">সর্বশেষ আপডেট</span>
             </div>
-            <h3 className="text-2xl sm:text-3xl font-black text-blue-950 font-sans">
+            <h3 className="text-2xl sm:text-3xl font-black text-blue-950 dark:text-white font-sans">
               {isHomepage ? 'নোটিশ বোর্ড ও সংবাদ ফিড' : 'স্কুল নোটিশ বোর্ড'}
             </h3>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
               {isHomepage 
                 ? 'আদর্শ শিশু কানন স্কুলের সাম্প্রতিক নোটিশ ও শিক্ষামূলক সংবাদের বিবরণী' 
                 : 'সব ধরনের প্রাতিষ্ঠানিক নোটিশ, পরীক্ষার খবর এবং ছুটির দিনপঞ্জি এখানে পাবেন।'}
@@ -73,7 +73,7 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
             setView && (
               <button 
                 onClick={() => setView('notice-board')}
-                className="mt-4 md:mt-0 px-4 py-2 text-sm bg-blue-100 hover:bg-blue-200 text-blue-900 font-bold rounded-lg flex items-center space-x-1.5 cursor-pointer transition-all duration-200"
+                className="mt-4 md:mt-0 px-4 py-2 text-sm bg-blue-100 dark:bg-blue-950 hover:bg-blue-200 dark:hover:bg-blue-900 text-blue-900 dark:text-amber-400 font-bold rounded-lg flex items-center space-x-1.5 cursor-pointer transition-all duration-200"
               >
                 <span>সব নোটিশ দেখুন</span>
                 <ArrowRight size={16} />
@@ -87,7 +87,7 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
                 placeholder="নোটিশ খুঁজুন..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-900 dark:text-white"
               />
             </div>
           )}
@@ -95,9 +95,9 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
 
         {/* Notices Grid */}
         {displayedNotices.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-200">
+          <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-gray-200 dark:border-slate-800">
             <AlertCircle className="mx-auto text-gray-400 mb-2" size={36} />
-            <p className="text-gray-500 font-medium">কোন নোটিশ পাওয়া যায়নি।</p>
+            <p className="text-gray-500 dark:text-slate-400 font-medium">কোন নোটিশ পাওয়া যায়নি।</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -105,10 +105,10 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
               <div
                 key={notice.id}
                 onClick={() => setSelectedNotice(notice)}
-                className={`group relative overflow-hidden bg-white rounded-xl border transition-all duration-300 hover:shadow-lg cursor-pointer flex flex-col justify-between ${
+                className={`group relative overflow-hidden bg-white dark:bg-slate-900 rounded-xl border transition-all duration-300 hover:shadow-lg cursor-pointer flex flex-col justify-between ${
                   notice.isPinned 
-                    ? 'border-amber-400 shadow-[0_4px_20px_rgba(245,158,11,0.08)] bg-amber-50/10' 
-                    : 'border-slate-100'
+                    ? 'border-amber-400 dark:border-amber-500 shadow-[0_4px_20px_rgba(245,158,11,0.08)] bg-amber-50/10 dark:bg-amber-950/20' 
+                    : 'border-slate-100 dark:border-slate-800'
                 }`}
               >
                 {/* Pinned Badge Overlay */}
@@ -121,13 +121,13 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
 
                 <div className="p-5 sm:p-6">
                   {/* Date and Time Header */}
-                  <div className="flex flex-wrap gap-3 items-center text-xs text-gray-500 font-medium mb-3">
-                    <div className="flex items-center space-x-1 bg-slate-100 px-2 py-0.5 rounded">
-                      <Calendar size={12} className="text-blue-900" />
+                  <div className="flex flex-wrap gap-3 items-center text-xs text-gray-500 dark:text-slate-400 font-medium mb-3">
+                    <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                      <Calendar size={12} className="text-blue-900 dark:text-amber-400" />
                       <span>{formatBengaliDate(notice.date)}</span>
                     </div>
-                    <div className="flex items-center space-x-1 bg-slate-100 px-2 py-0.5 rounded">
-                      <Clock size={12} className="text-blue-900" />
+                    <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                      <Clock size={12} className="text-blue-900 dark:text-amber-400" />
                       <span>{notice.time}</span>
                     </div>
                   </div>
@@ -136,7 +136,7 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* Notice Image (optional) */}
                     {notice.image && (
-                      <div className="w-full sm:w-24 h-20 rounded-lg overflow-hidden shrink-0 bg-gray-100 border border-gray-200">
+                      <div className="w-full sm:w-24 h-20 rounded-lg overflow-hidden shrink-0 bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
                         <img 
                           src={notice.image} 
                           alt="Notice" 
@@ -147,10 +147,10 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
                     )}
                     
                     <div>
-                      <h4 className="text-lg font-bold text-blue-950 group-hover:text-blue-700 transition-colors duration-200 leading-snug line-clamp-2">
+                      <h4 className="text-lg font-bold text-blue-950 dark:text-white group-hover:text-blue-700 dark:group-hover:text-amber-400 transition-colors duration-200 leading-snug line-clamp-2">
                         {notice.title}
                       </h4>
-                      <p className="text-gray-600 text-sm mt-1.5 line-clamp-2 leading-relaxed">
+                      <p className="text-gray-600 dark:text-slate-300 text-sm mt-1.5 line-clamp-2 leading-relaxed">
                         {notice.content}
                       </p>
                     </div>
@@ -158,9 +158,9 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
                 </div>
 
                 {/* Footer read more trigger */}
-                <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-blue-900 group-hover:bg-blue-50/50 transition-colors">
+                <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:bg-blue-50/50 dark:group-hover:bg-slate-900 transition-colors">
                   <div className="flex items-center space-x-1.5">
-                    <FileText size={14} className="text-blue-700" />
+                    <FileText size={14} className="text-blue-700 dark:text-amber-400" />
                     <span>বিস্তারিত পড়ুন</span>
                   </div>
                   <Eye size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -173,7 +173,7 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
         {/* Modal Notice Details */}
         {selectedNotice && (
           <div className="fixed inset-0 bg-blue-950/70 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200 dark:border-slate-800">
               
               {/* Header */}
               <div className="p-6 bg-gradient-to-r from-blue-900 to-blue-950 text-white flex justify-between items-start">
@@ -203,16 +203,16 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
                 
                 <button
                   onClick={() => setSelectedNotice(null)}
-                  className="p-1 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+                  className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer font-bold"
                 >
-                  <Clock size={20} className="rotate-45" /> {/* Use custom rotation for closing X, or let's use manual style */}
+                  ✕
                 </button>
               </div>
 
               {/* Scrollable Content */}
               <div className="p-6 overflow-y-auto space-y-4">
                 {selectedNotice.image && (
-                  <div className="w-full max-h-80 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                  <div className="w-full max-h-80 rounded-xl overflow-hidden bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
                     <img 
                       src={selectedNotice.image} 
                       alt="Notice Image" 
@@ -222,16 +222,16 @@ export default function NoticeBoard({ notices, isHomepage = false, setView }: No
                   </div>
                 )}
                 
-                <div className="text-gray-700 leading-relaxed text-base whitespace-pre-wrap font-sans">
+                <div className="text-gray-700 dark:text-slate-200 leading-relaxed text-base whitespace-pre-wrap font-sans">
                   {selectedNotice.content}
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 flex justify-end">
                 <button
                   onClick={() => setSelectedNotice(null)}
-                  className="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold text-sm rounded-lg cursor-pointer transition-colors"
+                  className="px-5 py-2 bg-blue-900 dark:bg-amber-500 dark:text-blue-950 hover:bg-blue-800 text-white font-bold text-sm rounded-lg cursor-pointer transition-colors"
                 >
                   বন্ধ করুন
                 </button>

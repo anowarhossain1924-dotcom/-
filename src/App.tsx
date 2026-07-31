@@ -53,6 +53,25 @@ export default function App() {
   const [currentView, setView] = useState<string>('home');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
 
+  // --- THEME STATE (LIGHT / DARK MODE) ---
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+
   // --- FIRESTORE REALTIME STATE ---
   const [notices, setNotices] = useState<Notice[]>(DEFAULT_NOTICES);
   const [classRoutines, setClassRoutines] = useState<RoutineItem[]>(DEFAULT_CLASS_ROUTINES);
@@ -103,7 +122,7 @@ export default function App() {
   const whatsappUrl = `https://wa.me/${cleanNumber}`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-gray-800 font-sans selection:bg-blue-900 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-gray-800 dark:text-slate-100 font-sans selection:bg-blue-900 selection:text-white transition-colors duration-300">
       
       {/* Header */}
       <Header 
@@ -116,6 +135,8 @@ export default function App() {
         classRoutines={classRoutines}
         examRoutines={examRoutines}
         schoolInfo={schoolInfo}
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
       />
 
       {/* Main Content View Switcher */}
@@ -132,10 +153,10 @@ export default function App() {
             {/* Feature Cards Grid (Main Features) */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 no-print">
               <div className="text-center mb-10">
-                <h3 className="text-2xl sm:text-3xl font-black text-blue-950 font-sans">
+                <h3 className="text-2xl sm:text-3xl font-black text-blue-950 dark:text-amber-400 font-sans">
                   আদর্শ শিক্ষালয়ের মূল সেবা ও সুযোগসমূহ
                 </h3>
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
                   কোমলমতি শিশুদের আনন্দময় শিক্ষার জন্য দ্রুত অ্যাক্সেস কার্ডসমূহ
                 </p>
                 <div className="w-16 h-1 bg-amber-500 mx-auto mt-3 rounded-full"></div>
@@ -146,69 +167,69 @@ export default function App() {
                 {/* Feature 1: Admission */}
                 <div 
                   onClick={() => setView('admission')}
-                  className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer text-center space-y-4 group"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-4 group"
                 >
-                  <div className="mx-auto w-14 h-14 bg-blue-100 text-blue-900 rounded-2xl flex items-center justify-center group-hover:bg-blue-900 group-hover:text-white transition-colors duration-300">
+                  <div className="mx-auto w-14 h-14 bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-300 rounded-2xl flex items-center justify-center group-hover:bg-blue-900 group-hover:text-white transition-colors duration-300">
                     <GraduationCap size={28} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-blue-950">ভর্তির আবেদন</h4>
-                    <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    <h4 className="text-lg font-bold text-blue-950 dark:text-white">ভর্তির আবেদন</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                       সহজ ও ঝঞ্ঝাটমুক্ত অনলাইন ভর্তি ফর্ম পূরণ এবং রসিদ সংগ্রহ করুন।
                     </p>
                   </div>
-                  <span className="inline-block text-xs font-bold text-blue-900 group-hover:underline">ফরম পূরণ করুন →</span>
+                  <span className="inline-block text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:underline">ফরম পূরণ করুন →</span>
                 </div>
 
                 {/* Feature 2: Class Routine */}
                 <div 
                   onClick={() => setView('routines')}
-                  className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer text-center space-y-4 group"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-4 group"
                 >
-                  <div className="mx-auto w-14 h-14 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center group-hover:bg-amber-500 group-hover:text-blue-950 transition-colors duration-300">
+                  <div className="mx-auto w-14 h-14 bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 rounded-2xl flex items-center justify-center group-hover:bg-amber-500 group-hover:text-blue-950 transition-colors duration-300">
                     <Clock size={28} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-blue-950">ক্লাস রুটিন</h4>
-                    <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    <h4 className="text-lg font-bold text-blue-950 dark:text-white">ক্লাস রুটিন</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                       সকল শ্রেণীর দৈনিক ক্লাস রুটিন দেখুন এবং প্রিন্ট কপি সংগ্রহ করুন।
                     </p>
                   </div>
-                  <span className="inline-block text-xs font-bold text-blue-900 group-hover:underline">সময়সূচী দেখুন →</span>
+                  <span className="inline-block text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:underline">সময়সূচী দেখুন →</span>
                 </div>
 
                 {/* Feature 3: Exam Routine */}
                 <div 
                   onClick={() => setView('routines')}
-                  className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer text-center space-y-4 group"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-4 group"
                 >
-                  <div className="mx-auto w-14 h-14 bg-green-100 text-green-700 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                  <div className="mx-auto w-14 h-14 bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
                     <CalendarDays size={28} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-blue-950">পরীক্ষার রুটিন</h4>
-                    <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    <h4 className="text-lg font-bold text-blue-950 dark:text-white">পরীক্ষার রুটিন</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                       অর্ধ-বার্ষিক ও বার্ষিক পরীক্ষার বিস্তারিত সময়সূচী ও কক্ষ নম্বর দেখুন।
                     </p>
                   </div>
-                  <span className="inline-block text-xs font-bold text-blue-900 group-hover:underline">পরীক্ষা সূচী দেখুন →</span>
+                  <span className="inline-block text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:underline">পরীক্ষা সূচী দেখুন →</span>
                 </div>
 
                 {/* Feature 4: School Info */}
                 <div 
                   onClick={() => setView('school-info')}
-                  className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer text-center space-y-4 group"
+                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-4 group"
                 >
-                  <div className="mx-auto w-14 h-14 bg-purple-100 text-purple-700 rounded-2xl flex items-center justify-center group-hover:bg-purple-700 group-hover:text-white transition-colors duration-300">
+                  <div className="mx-auto w-14 h-14 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 rounded-2xl flex items-center justify-center group-hover:bg-purple-700 group-hover:text-white transition-colors duration-300">
                     <School size={28} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-blue-950">স্কুল সম্পর্কিত তথ্য</h4>
-                    <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    <h4 className="text-lg font-bold text-blue-950 dark:text-white">স্কুল সম্পর্কিত তথ্য</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                       স্কুলের গৌরবময় ইতিহাস, লক্ষ্য ও মিশন, এবং উন্নত সুযোগ-সুবিধা জানুন।
                     </p>
                   </div>
-                  <span className="inline-block text-xs font-bold text-blue-900 group-hover:underline">পরিচিতি দেখুন →</span>
+                  <span className="inline-block text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:underline">পরিচিতি দেখুন →</span>
                 </div>
 
               </div>

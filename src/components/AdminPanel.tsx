@@ -1363,7 +1363,7 @@ export default function AdminPanel({
           {/* Logo Section */}
           <div className="p-5 bg-gradient-to-br from-slate-50 to-amber-50/30 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center gap-6">
             <div className="p-2 bg-white rounded-full shadow-sm border border-slate-100 shrink-0">
-              <Logo size={140} />
+              <Logo size={140} logoUrl={schoolInfo.logoUrl} />
             </div>
             <div className="space-y-3 text-center sm:text-left flex-1">
               <h5 className="font-bold text-slate-800 text-base">স্কুলের অফিসিয়াল লোগো (Official Vector Logo)</h5>
