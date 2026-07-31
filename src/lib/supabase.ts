@@ -411,31 +411,20 @@ export function subscribeApplications(onUpdate: (data: AdmissionApplication[]) =
   };
 }
 
-export function subscribeBanners(onUpdate: (data: BannerSlide[]) => void, initialDefaults: BannerSlide[]) {
+export function subscribeBanners(onUpdate: (data: BannerSlide[]) => void) {
   const cached = getLocalCache<BannerSlide[]>(STORAGE_KEYS.BANNERS);
-  if (cached && cached.length > 0) {
-    onUpdate(cached);
-  } else {
-    onUpdate(initialDefaults);
+  const cleanCache = cached ? cached.filter(b => b.id !== 'banner-1' && b.id !== 'banner-2' && b.id !== 'banner-3') : [];
+  if (cleanCache.length > 0) {
+    onUpdate(cleanCache);
   }
 
   const fetchAndSync = async () => {
     try {
       const { data, error } = await supabase.from('hero').select('*').order('sort_order', { ascending: true });
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const mapped = data.map(mapBannerFromDb);
         setLocalCache(STORAGE_KEYS.BANNERS, mapped);
         onUpdate(mapped);
-      } else if (error || !data || data.length === 0) {
-        const currentCache = getLocalCache<BannerSlide[]>(STORAGE_KEYS.BANNERS);
-        if (currentCache && currentCache.length > 0) {
-          onUpdate(currentCache);
-        } else if (initialDefaults.length > 0) {
-          const payload = initialDefaults.map((b, idx) => ({ ...mapBannerToDb(b), sort_order: idx }));
-          await supabase.from('hero').upsert(payload);
-          setLocalCache(STORAGE_KEYS.BANNERS, initialDefaults);
-          onUpdate(initialDefaults);
-        }
       }
     } catch (err) {
       console.error('Error fetching hero banners from Supabase:', err);

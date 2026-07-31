@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AdmissionApplication } from '../types';
-import { CheckCircle2, User, Users, MapPin, Phone, Mail, Award, ArrowLeft, Printer } from 'lucide-react';
+import { CheckCircle2, User, Users, MapPin, Phone, Mail, Award, ArrowLeft, Printer, AlertCircle } from 'lucide-react';
 
 interface AdmissionFormProps {
   onSubmit: (app: Omit<AdmissionApplication, 'id' | 'submittedAt' | 'status'>) => void;
@@ -189,6 +189,7 @@ export default function AdmissionForm({ onSubmit, classes }: AdmissionFormProps)
               <p>১. আবেদন কপিটি প্রিন্ট করে আপনার কাছে সংরক্ষণ করুন।</p>
               <p>২. আগামী ৫ কার্যদিবসের মধ্যে আপনার আবেদন যাচাই করে মোবাইল নাম্বারে চূড়ান্ত নির্দেশনা পাঠানো হবে।</p>
               <p>৩. ভর্তির জন্য জন্ম নিবন্ধন, অভিভাবকের জাতীয় পরিচয়পত্র ও পাসপোর্ট সাইজের ছবির প্রয়োজন হবে।</p>
+              <p className="font-bold text-amber-900 bg-amber-100 p-2 rounded mt-1">৪. ওয়েবসাইটে আবেদন করার পর স্কুলে গিয়ে সকল ফি প্রদান সম্পন্ন করে ভর্তি নিশ্চিত করতে হবে।</p>
             </div>
 
             {/* Receipt Actions */}
@@ -219,10 +220,19 @@ export default function AdmissionForm({ onSubmit, classes }: AdmissionFormProps)
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Page Header */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <h3 className="text-2xl sm:text-3xl font-black text-blue-950 font-sans">অনলাইন ভর্তি আবেদন ফরম</h3>
         <p className="text-gray-500 text-sm mt-1">আদর্শ শিশু কানন স্কুলে ২০২৬ শিক্ষাবর্ষে ভর্তির জন্য সঠিক তথ্য দিয়ে ফরমটি পূরণ করুন।</p>
         <div className="w-16 h-1 bg-amber-500 mx-auto mt-3 rounded-full"></div>
+      </div>
+
+      {/* Important Instruction Notice Box */}
+      <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl text-amber-900 text-xs sm:text-sm font-semibold mb-6 flex items-start space-x-3 shadow-sm">
+        <AlertCircle className="shrink-0 text-amber-600 mt-0.5" size={20} />
+        <div>
+          <span className="font-bold block text-amber-950 mb-0.5">গুরুত্বপূর্ণ নোটিশ:</span>
+          <span>ওয়েবসাইটে আবেদন করার পর স্কুলে গিয়ে সকল ফি প্রদান সম্পন্ন করে ভর্তি নিশ্চিত করতে হবে।</span>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">

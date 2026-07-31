@@ -1,25 +1,6 @@
 import { Notice, RoutineItem, ExamRoutineItem, AdmissionApplication, BannerSlide, SchoolInfo } from '../types';
 
-export const DEFAULT_BANNERS: BannerSlide[] = [
-  {
-    id: 'banner-1',
-    imageUrl: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1200',
-    title: 'আদর্শ শিশু কানন স্কুলে আপনাকে স্বাগতম',
-    subtitle: 'জ্ঞানই শক্তি - সুশিক্ষা, শৃঙ্খলা ও উন্নত নৈতিক চরিত্রের প্রতিশ্রুতি।'
-  },
-  {
-    id: 'banner-2',
-    imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=1200',
-    title: 'ভর্তি চলছে! ২০২৬ শিক্ষাবর্ষে ভর্তি বিজ্ঞপ্তি',
-    subtitle: 'প্লে-গ্রুপ থেকে ১০ম শ্রেণী পর্যন্ত সীমিত আসনে ভর্তি কার্যক্রম চলছে।'
-  },
-  {
-    id: 'banner-3',
-    imageUrl: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&q=80&w=1200',
-    title: 'আমাদের আধুনিক ও শিশুবান্ধব শিক্ষাদান পদ্ধতি',
-    subtitle: 'ডিজিটাল মাল্টিমিডিয়া ক্লাসরুম ও দক্ষ শিক্ষক মণ্ডলী দ্বারা পরিচালিত।'
-  }
-];
+export const DEFAULT_BANNERS: BannerSlide[] = [];
 
 export const DEFAULT_NOTICES: Notice[] = [
   {

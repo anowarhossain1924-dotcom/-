@@ -23,9 +23,11 @@ export default function Footer({ info }: FooterProps) {
           {/* Col 1: School Identity */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="bg-white p-1 rounded-full shadow-inner ring-2 ring-amber-400">
-                <Logo size={55} logoUrl={info.logoUrl} />
-              </div>
+              {info.logoUrl && info.logoUrl.trim() !== '' && (
+                <div className="bg-white p-1 rounded-full shadow-inner ring-2 ring-amber-400">
+                  <Logo size={55} logoUrl={info.logoUrl} />
+                </div>
+              )}
               <div>
                 <h4 className="text-lg font-bold text-white font-sans">আদর্শ শিশু কানন স্কুল</h4>
                 <p className="text-xs text-slate-400 tracking-wide">স্থাপিত: ২০১১ ইং</p>
@@ -97,13 +99,15 @@ export default function Footer({ info }: FooterProps) {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-semibold uppercase tracking-wider">
+        <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-semibold tracking-wider">
           <div>
             © ২০২৬ আদর্শ শিশু কানন স্কুল। সর্বস্বত্ব সংরক্ষিত।
           </div>
-          <div className="flex items-center space-x-2">
-            <span>ডিজাইন ও উন্নয়ন: সহঃ পরিচালক</span>
-            <span className="text-slate-700">|</span>
+          <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-right">
+            <div className="normal-case">
+              <div className="font-bold text-amber-400 text-sm">All credit MUSTAKIM BILLAH</div>
+              <div className="text-[11px] text-slate-400 font-normal">Junior Web Developer</div>
+            </div>
             <button
               onClick={scrollToTop}
               className="px-3 py-1.5 bg-slate-800 hover:bg-amber-500 hover:text-blue-950 text-slate-300 rounded-lg flex items-center space-x-1 cursor-pointer transition-colors"

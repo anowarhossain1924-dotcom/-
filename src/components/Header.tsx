@@ -167,9 +167,11 @@ export default function Header({
             onClick={() => handleNavClick('home')}
             className="flex items-center space-x-3 cursor-pointer group shrink-0"
           >
-            <div className="bg-white p-1 rounded-full shadow-inner ring-2 ring-amber-400 transform group-hover:scale-105 transition-transform duration-300">
-              <Logo size={50} logoUrl={logoUrl} />
-            </div>
+            {logoUrl && logoUrl.trim() !== '' && (
+              <div className="bg-white p-1 rounded-full shadow-inner ring-2 ring-amber-400 transform group-hover:scale-105 transition-transform duration-300">
+                <Logo size={50} logoUrl={logoUrl} />
+              </div>
+            )}
             <div>
               <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-white group-hover:text-amber-400 transition-colors duration-300 font-sans leading-tight">
                 আদর্শ শিশু কানন স্কুল

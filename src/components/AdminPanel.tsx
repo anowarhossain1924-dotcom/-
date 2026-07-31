@@ -1362,9 +1362,11 @@ export default function AdminPanel({
 
           {/* Logo Section */}
           <div className="p-5 bg-gradient-to-br from-slate-50 to-amber-50/30 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center gap-6">
-            <div className="p-2 bg-white rounded-full shadow-sm border border-slate-100 shrink-0">
-              <Logo size={140} logoUrl={schoolInfo.logoUrl} />
-            </div>
+            {schoolInfo.logoUrl && schoolInfo.logoUrl.trim() !== '' && (
+              <div className="p-2 bg-white rounded-full shadow-sm border border-slate-100 shrink-0">
+                <Logo size={140} logoUrl={schoolInfo.logoUrl} />
+              </div>
+            )}
             <div className="space-y-3 text-center sm:text-left flex-1">
               <h5 className="font-bold text-slate-800 text-base">স্কুলের অফিসিয়াল লোগো (Official Vector Logo)</h5>
               <p className="text-xs text-slate-500 leading-relaxed max-w-xl">
@@ -1418,9 +1420,13 @@ export default function AdminPanel({
               <div className="flex flex-col md:flex-row items-center gap-6 bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
                 <div className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-xl shrink-0">
                   <span className="text-[11px] font-bold text-gray-500 mb-2">বর্তমান ওয়েবসাইট লোগো প্রিভিউ</span>
-                  <div className="bg-white p-2 rounded-full shadow-md ring-2 ring-amber-400">
-                    <Logo size={70} logoUrl={schoolInfo.logoUrl} />
-                  </div>
+                  {schoolInfo.logoUrl && schoolInfo.logoUrl.trim() !== '' ? (
+                    <div className="bg-white p-2 rounded-full shadow-md ring-2 ring-amber-400">
+                      <Logo size={70} logoUrl={schoolInfo.logoUrl} />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">লোগো নেই</span>
+                  )}
                 </div>
 
                 <div className="flex-1 space-y-3 w-full">

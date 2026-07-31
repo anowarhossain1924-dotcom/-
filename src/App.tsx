@@ -86,7 +86,7 @@ export default function App() {
     const unsubClassRoutines = subscribeClassRoutines(setClassRoutines, DEFAULT_CLASS_ROUTINES);
     const unsubExamRoutines = subscribeExamRoutines(setExamRoutines, DEFAULT_EXAM_ROUTINES);
     const unsubApps = subscribeApplications(setApplications, DEFAULT_APPLICATIONS);
-    const unsubBanners = subscribeBanners(setBanners, DEFAULT_BANNERS);
+    const unsubBanners = subscribeBanners(setBanners);
     const unsubSchoolInfo = subscribeSchoolInfo(setSchoolInfo, DEFAULT_SCHOOL_INFO);
 
     return () => {
