@@ -12,7 +12,11 @@ import {
   Eye, 
   ExternalLink, 
   X,
-  FileCheck
+  FileCheck,
+  Sparkles,
+  ZoomIn,
+  Layers,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface RoutinesProps {
@@ -33,8 +37,14 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
   const [selectedClass, setSelectedClass] = useState<string>('Play');
   const [previewAttachment, setPreviewAttachment] = useState<PreviewAttachment | null>(null);
 
-  // Filtered Class Routines
+  // Sub-view toggle preference ('auto' | 'full' | 'table')
+  const [classViewPref, setClassViewPref] = useState<'full' | 'table'>('full');
+  const [examViewPref, setExamViewPref] = useState<'full' | 'table'>('full');
+
+  // Filtered Class Routines for selected class
   const filteredClassRoutines = classRoutines.filter(r => r.className === selectedClass);
+  const fullClassRoutines = filteredClassRoutines.filter(r => Boolean(r.isFullRoutine || r.time === 'পূর্ণাঙ্গ সময়সূচী'));
+  const singleClassRoutines = filteredClassRoutines.filter(r => !r.isFullRoutine && r.time !== 'পূর্ণাঙ্গ সময়সূচী');
   
   const daysOfWeek = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
   const dayLabels: { [key: string]: string } = {
@@ -46,10 +56,12 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
     'Thursday': 'বৃহস্পতিবার (Thursday)'
   };
 
-  // Filtered Exam Routines
+  // Filtered Exam Routines for selected class
   const filteredExamRoutines = examRoutines.filter(r => r.className === selectedClass).sort((a, b) => {
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
+  const fullExamRoutines = filteredExamRoutines.filter(r => Boolean(r.isFullRoutine || r.day === 'পূর্ণাঙ্গ সময়সূচী'));
+  const singleExamRoutines = filteredExamRoutines.filter(r => !r.isFullRoutine && r.day !== 'পূর্ণাঙ্গ সময়সূচী');
 
   // Current view attachments
   const currentRoutines = activeTab === 'class' ? filteredClassRoutines : filteredExamRoutines;
@@ -69,164 +81,393 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
   };
 
   const openAttachment = (url: string, title: string, name?: string, type?: string) => {
-    if (type === 'image') {
-      setPreviewAttachment({ url, title, name, type });
+    if (type === 'image' || url.startsWith('data:image')) {
+      setPreviewAttachment({ url, title, name, type: 'image' });
     } else {
       window.open(url, '_blank');
     }
   };
 
-  // Isolated Render Method for Class Routine
-  const renderClassRoutine = () => {
-    if (filteredClassRoutines.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <p className="text-gray-500 font-medium">এই শ্রেণীর জন্য ক্লাস রুটিন এখনও প্রকাশ করা হয়নি।</p>
-        </div>
-      );
-    }
+  // Component to render a full uploaded routine card (Image or Document)
+  const renderFullRoutineCard = (item: RoutineItem | ExamRoutineItem, isExam = false) => {
+    const isImage = item.attachmentType === 'image' || item.attachmentUrl?.startsWith('data:image') || /\.(jpg|jpeg|png|webp|gif)$/i.test(item.attachmentName || '');
+    const isPdf = item.attachmentType === 'pdf' || /\.pdf$/i.test(item.attachmentName || '');
 
     return (
-      <div className="space-y-6">
-        {daysOfWeek.map((day) => {
-          const dayRoutines = filteredClassRoutines.filter(r => r.day === day);
-          if (dayRoutines.length === 0) return null;
-
-          return (
-            <div key={day} className="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-              {/* Day Title */}
-              <div className="bg-blue-900 text-white px-4 py-2.5 text-sm font-bold flex justify-between items-center">
-                <span>{dayLabels[day]}</span>
-                <span className="text-xs bg-blue-800/80 px-2 py-0.5 rounded font-normal text-blue-100">
-                  {dayRoutines.length} টি ক্লাস
-                </span>
-              </div>
-
-              {/* Table of routines */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-gray-700 min-w-[550px]">
-                  <thead className="bg-slate-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-slate-100">
-                    <tr>
-                      <th className="px-4 py-3 text-left">সময় (Time)</th>
-                      <th className="px-4 py-3 text-left">বিষয় (Subject)</th>
-                      <th className="px-4 py-3 text-left">শিক্ষক (Teacher)</th>
-                      <th className="px-4 py-3 text-left">কক্ষ নং (Room)</th>
-                      <th className="px-4 py-3 text-left no-print">সংযুক্তি (File)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {dayRoutines.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3.5 font-semibold text-blue-950 flex items-center space-x-1.5 whitespace-nowrap">
-                          <Clock size={14} className="text-blue-900 shrink-0" />
-                          <span>{item.time}</span>
-                        </td>
-                        <td className="px-4 py-3.5 font-bold text-gray-900">{item.subject}</td>
-                        <td className="px-4 py-3.5 text-gray-600">{item.teacherName}</td>
-                        <td className="px-4 py-3.5 font-mono text-gray-500">{item.room}</td>
-                        <td className="px-4 py-3.5 no-print">
-                          {item.attachmentUrl ? (
-                            <button
-                              type="button"
-                              onClick={() => openAttachment(
-                                item.attachmentUrl!, 
-                                `${selectedClass} - ${item.subject} (${dayLabels[day]})`, 
-                                item.attachmentName, 
-                                item.attachmentType
-                              )}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold rounded-lg border border-blue-200 text-xs transition cursor-pointer"
-                              title={item.attachmentName || 'ফাইল দেখুন'}
-                            >
-                              {item.attachmentType === 'image' ? (
-                                <ImageIcon size={13} className="text-emerald-600" />
-                              ) : (
-                                <FileText size={13} className="text-blue-600" />
-                              )}
-                              <span>{item.attachmentType === 'image' ? 'ছবি দেখুন' : 'ডকুমেন্ট'}</span>
-                              <Eye size={11} className="text-blue-700" />
-                            </button>
-                          ) : (
-                            <span className="text-gray-300 text-xs">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+      <div key={item.id} className="bg-slate-50 border border-blue-200 rounded-2xl overflow-hidden shadow-sm space-y-4 p-5 sm:p-6 transition-all hover:shadow-md">
+        
+        {/* Header of Full Routine Card */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-blue-100 gap-2">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-900 rounded-full font-bold text-xs">
+                <Sparkles size={12} className="text-purple-600" />
+                <span>অফিসিয়াল পূর্ণাঙ্গ {isExam ? 'পরীক্ষার' : 'ক্লাস'} রুটিন কপি</span>
+              </span>
+              <span className="text-xs bg-blue-100 text-blue-900 font-bold px-2.5 py-0.5 rounded-md">
+                {item.className}
+              </span>
             </div>
-          );
-        })}
+            <h4 className="text-base sm:text-lg font-bold text-blue-950 mt-1">
+              {item.subject}
+            </h4>
+            {item.note && (
+              <p className="text-xs text-gray-600 font-medium">{item.note}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 no-print">
+            {item.attachmentUrl && (
+              <a
+                href={item.attachmentUrl}
+                download={item.attachmentName || 'routine-official-file'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm cursor-pointer"
+              >
+                <Download size={14} />
+                <span>ডাউনলোড</span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Display image directly or file card */}
+        {item.attachmentUrl ? (
+          <div>
+            {isImage ? (
+              <div className="space-y-3">
+                <div 
+                  className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white p-2 sm:p-3 text-center cursor-pointer shadow-inner"
+                  onClick={() => openAttachment(item.attachmentUrl!, `${item.className} - ${item.subject}`, item.attachmentName, 'image')}
+                >
+                  <img
+                    src={item.attachmentUrl}
+                    alt={item.subject}
+                    className="max-h-[600px] w-auto mx-auto object-contain rounded-lg transition-transform duration-200 group-hover:scale-[1.01]"
+                  />
+                  <div className="absolute inset-0 bg-blue-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                    <span className="px-4 py-2 bg-blue-900/90 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-lg">
+                      <ZoomIn size={16} />
+                      <span>বড় করে দেখতে ক্লিক করুন (Zoom)</span>
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center text-xs text-gray-500 no-print px-1">
+                  <span>ফাইলের নাম: {item.attachmentName || 'রুটিন ছবি'}</span>
+                  <button
+                    type="button"
+                    onClick={() => openAttachment(item.attachmentUrl!, `${item.className} - ${item.subject}`, item.attachmentName, 'image')}
+                    className="text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <ZoomIn size={13} />
+                    <span>পূর্ণ পর্দায় দেখুন</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 bg-white rounded-xl border border-blue-200 text-center space-y-3 max-w-lg mx-auto shadow-sm">
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-900 mx-auto flex items-center justify-center">
+                  {isPdf ? <FileText size={32} className="text-rose-600" /> : <FileSpreadsheet size={32} className="text-emerald-600" />}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">{item.attachmentName || 'অফিসিয়াল রুটিন ডকুমেন্ট'}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {item.attachmentType?.toUpperCase() || 'DOCUMENT'} ফরম্যাটের পূর্ণাঙ্গ রুটিন ফাইল
+                  </p>
+                </div>
+                <div className="flex justify-center gap-3 pt-2 no-print">
+                  <a
+                    href={item.attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition shadow-sm"
+                  >
+                    <Eye size={14} />
+                    <span>সরাসরি দেখুন</span>
+                  </a>
+                  <a
+                    href={item.attachmentUrl}
+                    download={item.attachmentName || 'routine-file'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition shadow-sm"
+                  >
+                    <Download size={14} />
+                    <span>ডাউনলোড করুন</span>
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500">কোন ফাইল পাওয়া যায়নি।</p>
+        )}
+
       </div>
     );
   };
 
-  // Isolated Render Method for Exam Routine
-  const renderExamRoutine = () => {
-    if (filteredExamRoutines.length === 0) {
+  // Render Method for Class Routine (Handles Dual Modes: Full File Upload vs Single Period Entries)
+  const renderClassRoutine = () => {
+    const hasFull = fullClassRoutines.length > 0;
+    const hasSingle = singleClassRoutines.length > 0;
+
+    if (!hasFull && !hasSingle) {
       return (
-        <div className="text-center py-12">
-          <p className="text-gray-500 font-medium">এই শ্রেণীর জন্য পরীক্ষার রুটিন এখনও প্রকাশ করা হয়নি।</p>
+        <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-gray-200">
+          <BookOpen size={40} className="mx-auto text-gray-300 mb-2" />
+          <p className="text-gray-500 font-bold text-sm">{selectedClass} শ্রেণীর জন্য ক্লাস রুটিন এখনও প্রকাশ করা হয়নি।</p>
+          <p className="text-xs text-gray-400 mt-1">রুটিন প্রকাশিত হলে এখানে দেখা যাবে।</p>
         </div>
       );
     }
 
+    // Determine what to display
+    const showFull = hasFull && (!hasSingle || classViewPref === 'full');
+    const showTable = hasSingle && (!hasFull || classViewPref === 'table');
+
     return (
-      <div className="overflow-x-auto rounded-xl border border-slate-100 shadow-sm">
-        <table className="w-full text-left text-sm text-gray-700 min-w-[620px]">
-          <thead className="bg-blue-900 text-white text-xs font-bold uppercase tracking-wider">
-            <tr>
-              <th className="px-4 py-3">তারিখ ও বার (Date & Day)</th>
-              <th className="px-4 py-3">সময় (Time)</th>
-              <th className="px-4 py-3">বিষয় (Subject)</th>
-              <th className="px-4 py-3">কক্ষ (Room)</th>
-              <th className="px-4 py-3 no-print">সংযুক্তি (File)</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {filteredExamRoutines.map((item) => (
-              <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-4 py-4 font-bold text-blue-950">
-                  <div className="flex items-center space-x-2">
-                    <Calendar size={14} className="text-amber-500 shrink-0" />
-                    <div>
-                      <p>{formatBengaliDate(item.date)}</p>
-                      <p className="text-xs text-gray-500 font-normal">{item.day}</p>
-                    </div>
+      <div className="space-y-6">
+
+        {/* Dual Mode Switcher Banner (when both full file and single period entries exist) */}
+        {hasFull && hasSingle && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-blue-50/70 border border-blue-200 rounded-xl gap-2 no-print">
+            <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+              <Layers size={14} className="text-blue-700" />
+              <span>এই শ্রেণীর জন্য পূর্ণাঙ্গ রুটিন ফাইল ও পিরিয়ড তালিকা উভয়ই বিদ্যমান:</span>
+            </span>
+            <div className="flex bg-white p-1 rounded-lg border border-blue-200 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setClassViewPref('full')}
+                className={`px-3 py-1.5 rounded-md transition cursor-pointer flex items-center gap-1.5 ${
+                  classViewPref === 'full' ? 'bg-blue-900 text-white shadow-xs' : 'text-gray-600 hover:text-blue-900'
+                }`}
+              >
+                <Sparkles size={12} />
+                <span>পূর্ণাঙ্গ রুটিন কপি ({fullClassRoutines.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setClassViewPref('table')}
+                className={`px-3 py-1.5 rounded-md transition cursor-pointer flex items-center gap-1.5 ${
+                  classViewPref === 'table' ? 'bg-blue-900 text-white shadow-xs' : 'text-gray-600 hover:text-blue-900'
+                }`}
+              >
+                <Clock size={12} />
+                <span>পিরিয়ডভিত্তিক ছক ({singleClassRoutines.length})</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 1. Show Full Routine Cards if available and selected */}
+        {showFull && (
+          <div className="space-y-6">
+            {fullClassRoutines.map(item => renderFullRoutineCard(item, false))}
+          </div>
+        )}
+
+        {/* 2. Show Single Period Structured Table if available and selected */}
+        {showTable && (
+          <div className="space-y-6">
+            {daysOfWeek.map((day) => {
+              const dayRoutines = singleClassRoutines.filter(r => r.day === day);
+              if (dayRoutines.length === 0) return null;
+
+              return (
+                <div key={day} className="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+                  {/* Day Title */}
+                  <div className="bg-blue-900 text-white px-4 py-2.5 text-sm font-bold flex justify-between items-center">
+                    <span>{dayLabels[day]}</span>
+                    <span className="text-xs bg-blue-800/80 px-2 py-0.5 rounded font-normal text-blue-100">
+                      {dayRoutines.length} টি ক্লাস
+                    </span>
                   </div>
-                </td>
-                <td className="px-4 py-4 text-gray-700 font-medium whitespace-nowrap">{item.time}</td>
-                <td className="px-4 py-4 font-bold text-gray-900">{item.subject}</td>
-                <td className="px-4 py-4 font-mono text-gray-500">{item.room}</td>
-                <td className="px-4 py-4 no-print">
-                  {item.attachmentUrl ? (
-                    <button
-                      type="button"
-                      onClick={() => openAttachment(
-                        item.attachmentUrl!, 
-                        `${selectedClass} - ${item.subject} পরীক্ষার রুটিন`, 
-                        item.attachmentName, 
-                        item.attachmentType
-                      )}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold rounded-lg border border-blue-200 text-xs transition cursor-pointer"
-                      title={item.attachmentName || 'ফাইল দেখুন'}
-                    >
-                      {item.attachmentType === 'image' ? (
-                        <ImageIcon size={13} className="text-emerald-600" />
+
+                  {/* Table of routines */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-700 min-w-[550px]">
+                      <thead className="bg-slate-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-slate-100">
+                        <tr>
+                          <th className="px-4 py-3 text-left">সময় (Time)</th>
+                          <th className="px-4 py-3 text-left">বিষয় (Subject)</th>
+                          <th className="px-4 py-3 text-left">শিক্ষক (Teacher)</th>
+                          <th className="px-4 py-3 text-left">কক্ষ নং (Room)</th>
+                          <th className="px-4 py-3 text-left no-print">সংযুক্তি (File)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {dayRoutines.map((item) => (
+                          <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-4 py-3.5 font-semibold text-blue-950 flex items-center space-x-1.5 whitespace-nowrap">
+                              <Clock size={14} className="text-blue-900 shrink-0" />
+                              <span>{item.time}</span>
+                            </td>
+                            <td className="px-4 py-3.5 font-bold text-gray-900">{item.subject}</td>
+                            <td className="px-4 py-3.5 text-gray-600">{item.teacherName}</td>
+                            <td className="px-4 py-3.5 font-mono text-gray-500">{item.room}</td>
+                            <td className="px-4 py-3.5 no-print">
+                              {item.attachmentUrl ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openAttachment(
+                                    item.attachmentUrl!, 
+                                    `${selectedClass} - ${item.subject} (${dayLabels[day]})`, 
+                                    item.attachmentName, 
+                                    item.attachmentType
+                                  )}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold rounded-lg border border-blue-200 text-xs transition cursor-pointer"
+                                  title={item.attachmentName || 'ফাইল দেখুন'}
+                                >
+                                  {item.attachmentType === 'image' ? (
+                                    <ImageIcon size={13} className="text-emerald-600" />
+                                  ) : (
+                                    <FileText size={13} className="text-blue-600" />
+                                  )}
+                                  <span>{item.attachmentType === 'image' ? 'ছবি দেখুন' : 'ডকুমেন্ট'}</span>
+                                  <Eye size={11} className="text-blue-700" />
+                                </button>
+                              ) : (
+                                <span className="text-gray-300 text-xs">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
+    );
+  };
+
+  // Render Method for Exam Routine (Handles Dual Modes: Full File Upload vs Single Subject Entries)
+  const renderExamRoutine = () => {
+    const hasFull = fullExamRoutines.length > 0;
+    const hasSingle = singleExamRoutines.length > 0;
+
+    if (!hasFull && !hasSingle) {
+      return (
+        <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-gray-200">
+          <Calendar size={40} className="mx-auto text-gray-300 mb-2" />
+          <p className="text-gray-500 font-bold text-sm">{selectedClass} শ্রেণীর জন্য পরীক্ষার রুটিন এখনও প্রকাশ করা হয়নি।</p>
+          <p className="text-xs text-gray-400 mt-1">পরীক্ষার তারিখ ও রুটিন প্রকাশিত হলে এখানে দেখা যাবে।</p>
+        </div>
+      );
+    }
+
+    const showFull = hasFull && (!hasSingle || examViewPref === 'full');
+    const showTable = hasSingle && (!hasFull || examViewPref === 'table');
+
+    return (
+      <div className="space-y-6">
+
+        {/* Dual Mode Switcher Banner (when both full file and single subject entries exist) */}
+        {hasFull && hasSingle && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-blue-50/70 border border-blue-200 rounded-xl gap-2 no-print">
+            <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+              <Layers size={14} className="text-blue-700" />
+              <span>এই শ্রেণীর জন্য সম্পূর্ণ পরীক্ষার রুটিন কপি ও বিষয়ভিত্তিক তালিকা উভয়ই বিদ্যমান:</span>
+            </span>
+            <div className="flex bg-white p-1 rounded-lg border border-blue-200 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setExamViewPref('full')}
+                className={`px-3 py-1.5 rounded-md transition cursor-pointer flex items-center gap-1.5 ${
+                  examViewPref === 'full' ? 'bg-blue-900 text-white shadow-xs' : 'text-gray-600 hover:text-blue-900'
+                }`}
+              >
+                <Sparkles size={12} />
+                <span>সম্পূর্ণ রুটিন কপি ({fullExamRoutines.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setExamViewPref('table')}
+                className={`px-3 py-1.5 rounded-md transition cursor-pointer flex items-center gap-1.5 ${
+                  examViewPref === 'table' ? 'bg-blue-900 text-white shadow-xs' : 'text-gray-600 hover:text-blue-900'
+                }`}
+              >
+                <Calendar size={12} />
+                <span>বিষয়ভিত্তিক ছক ({singleExamRoutines.length})</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 1. Show Full Routine Cards if available and selected */}
+        {showFull && (
+          <div className="space-y-6">
+            {fullExamRoutines.map(item => renderFullRoutineCard(item, true))}
+          </div>
+        )}
+
+        {/* 2. Show Single Subject Exam Table if available and selected */}
+        {showTable && (
+          <div className="overflow-x-auto rounded-xl border border-slate-100 shadow-sm">
+            <table className="w-full text-left text-sm text-gray-700 min-w-[620px]">
+              <thead className="bg-blue-900 text-white text-xs font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="px-4 py-3">তারিখ ও বার (Date & Day)</th>
+                  <th className="px-4 py-3">সময় (Time)</th>
+                  <th className="px-4 py-3">বিষয় (Subject)</th>
+                  <th className="px-4 py-3">কক্ষ (Room)</th>
+                  <th className="px-4 py-3 no-print">সংযুক্তি (File)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {singleExamRoutines.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-4 font-bold text-blue-950">
+                      <div className="flex items-center space-x-2">
+                        <Calendar size={14} className="text-amber-500 shrink-0" />
+                        <div>
+                          <p>{formatBengaliDate(item.date)}</p>
+                          <p className="text-xs text-gray-500 font-normal">{item.day}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-gray-700 font-medium whitespace-nowrap">{item.time}</td>
+                    <td className="px-4 py-4 font-bold text-gray-900">{item.subject}</td>
+                    <td className="px-4 py-4 font-mono text-gray-500">{item.room}</td>
+                    <td className="px-4 py-4 no-print">
+                      {item.attachmentUrl ? (
+                        <button
+                          type="button"
+                          onClick={() => openAttachment(
+                            item.attachmentUrl!, 
+                            `${selectedClass} - ${item.subject} পরীক্ষার রুটিন`, 
+                            item.attachmentName, 
+                            item.attachmentType
+                          )}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold rounded-lg border border-blue-200 text-xs transition cursor-pointer"
+                          title={item.attachmentName || 'ফাইল দেখুন'}
+                        >
+                          {item.attachmentType === 'image' ? (
+                            <ImageIcon size={13} className="text-emerald-600" />
+                          ) : (
+                            <FileText size={13} className="text-blue-600" />
+                          )}
+                          <span>{item.attachmentType === 'image' ? 'ছবি দেখুন' : 'ডকুমেন্ট'}</span>
+                          <Eye size={11} className="text-blue-700" />
+                        </button>
                       ) : (
-                        <FileText size={13} className="text-blue-600" />
+                        <span className="text-gray-300 text-xs">-</span>
                       )}
-                      <span>{item.attachmentType === 'image' ? 'ছবি দেখুন' : 'ডকুমেন্ট'}</span>
-                      <Eye size={11} className="text-blue-700" />
-                    </button>
-                  ) : (
-                    <span className="text-gray-300 text-xs">-</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
       </div>
     );
   };
@@ -316,54 +557,10 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
           {attachedItems.length > 0 && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-full border border-emerald-200">
               <FileCheck size={14} className="text-emerald-600" />
-              <span>{attachedItems.length} টি ছবি / ফাইল সংযুক্তি পাওয়া গেছে</span>
+              <span>{attachedItems.length} টি ছবি / ফাইল সংযুক্তি</span>
             </span>
           )}
         </div>
-
-        {/* Highlights banner if uploaded routine files/images exist for this class */}
-        {attachedItems.length > 0 && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-emerald-50/60 border border-blue-200 rounded-2xl shadow-sm no-print">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-              <div className="flex items-start sm:items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5 sm:mt-0">
-                  <Paperclip size={20} />
-                </div>
-                <div>
-                  <h5 className="font-bold text-blue-950 text-sm">
-                    {selectedClass} শ্রেণীর রুটিনের ছবি বা ডকুমেন্ট সংযুক্তি
-                  </h5>
-                  <p className="text-xs text-gray-600">
-                    এডমিন কর্তৃক আপলোডকৃত পূর্ণাঙ্গ রুটিন ছবি বা ফাইল নিচে ক্লিক করে সরাসরি দেখতে ও ডাউনলোড করতে পারেন:
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 shrink-0">
-                {attachedItems.map((item, idx) => (
-                  <button
-                    key={item.id || idx}
-                    type="button"
-                    onClick={() => openAttachment(
-                      item.attachmentUrl!, 
-                      `${selectedClass} - ${item.subject} রুটিন`, 
-                      item.attachmentName, 
-                      item.attachmentType
-                    )}
-                    className="px-3 py-1.5 bg-white hover:bg-blue-900 hover:text-white text-blue-950 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center space-x-1.5 cursor-pointer"
-                  >
-                    {item.attachmentType === 'image' ? (
-                      <ImageIcon size={14} className="text-emerald-600" />
-                    ) : (
-                      <FileText size={14} className="text-blue-600" />
-                    )}
-                    <span className="max-w-[130px] truncate">{item.subject}</span>
-                    <Eye size={12} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Dynamically render routines using robust sub-render helper methods */}
         {activeTab === 'class' ? renderClassRoutine() : renderExamRoutine()}

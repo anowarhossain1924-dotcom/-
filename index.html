@@ -1,13 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html lang="bn">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <title>আদর্শ শিশু কানন স্কুল</title>
+    <meta name="description" content="কাশিম বাজার, সুন্দরগঞ্জ, গাইবান্ধার আদর্শ শিশু কানন স্কুলের অফিসিয়াল ওয়েবসাইট" />
+    
+    <!-- OpenGraph & SEO -->
+    <meta property="og:title" content="আদর্শ শিশু কানন স্কুল" />
+    <meta property="og:description" content="কাশিম বাজার, সুন্দরগঞ্জ, গাইবান্ধার আদর্শ শিশু কানন স্কুলের অফিসিয়াল ওয়েবসাইট" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/pwa-512x512.png" />
+
+    <!-- Android & PWA Meta -->
+    <meta name="theme-color" content="#1e3a8a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="আদর্শ স্কুল" />
+
+    <!-- iOS Safari Meta -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="আদর্শ স্কুল" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="alternate icon" type="image/png" href="/pwa-192x192.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
   </head>
-  <body>
+  <body class="antialiased selection:bg-blue-900 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

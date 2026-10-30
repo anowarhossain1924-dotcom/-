@@ -31,7 +31,12 @@ import {
   FileText,
   UploadCloud,
   ExternalLink,
-  Loader2
+  Loader2,
+  Sparkles,
+  Filter,
+  FileCheck,
+  BookOpen,
+  Calendar
 } from 'lucide-react';
 import Logo from './Logo';
 import { 
@@ -98,7 +103,18 @@ export default function AdminPanel({
     published: true
   });
 
-  // Routine manage form state
+  // Routine manage form state - DUAL MODE (Full Routine Upload OR Single Entry)
+  const [classRoutineMode, setClassRoutineMode] = useState<'full_upload' | 'single_entry'>('full_upload');
+  const [fullClassRoutineForm, setFullClassRoutineForm] = useState({
+    className: 'Play',
+    title: 'সম্পূর্ণ সাপ্তাহিক ক্লাস রুটিন',
+    note: '',
+    attachmentUrl: '',
+    attachmentName: '',
+    attachmentType: ''
+  });
+  const [isUploadingFullClassFile, setIsUploadingFullClassFile] = useState(false);
+
   const [classRoutineForm, setClassRoutineForm] = useState({
     className: 'Play',
     subject: '',
@@ -112,6 +128,18 @@ export default function AdminPanel({
   });
   const [isUploadingClassFile, setIsUploadingClassFile] = useState(false);
 
+  const [examRoutineMode, setExamRoutineMode] = useState<'full_upload' | 'single_entry'>('full_upload');
+  const [fullExamRoutineForm, setFullExamRoutineForm] = useState({
+    className: 'Play',
+    examTitle: 'বার্ষিক পরীক্ষা ২০২৫',
+    dateRange: '',
+    note: '',
+    attachmentUrl: '',
+    attachmentName: '',
+    attachmentType: ''
+  });
+  const [isUploadingFullExamFile, setIsUploadingFullExamFile] = useState(false);
+
   const [examRoutineForm, setExamRoutineForm] = useState({
     className: 'Play',
     subject: '',
@@ -124,6 +152,10 @@ export default function AdminPanel({
     attachmentType: ''
   });
   const [isUploadingExamFile, setIsUploadingExamFile] = useState(false);
+
+  // Filters for routine management list
+  const [classRoutineFilter, setClassRoutineFilter] = useState<string>('all');
+  const [examRoutineFilter, setExamRoutineFilter] = useState<string>('all');
 
   // Detailed Application Viewer
   const [viewingApp, setViewingApp] = useState<AdmissionApplication | null>(null);
@@ -384,7 +416,114 @@ export default function AdminPanel({
     }
   };
 
-  // ----- ROUTINE ACTIONS -----
+  // ----- ROUTINE ACTIONS (DUAL-MODE: FULL UPLOAD OR SINGLE ENTRY) -----
+  const handleFullClassFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingFullClassFile(true);
+    try {
+      const res = await uploadFileToSupabaseStorage(file, 'class-routines');
+      setFullClassRoutineForm(prev => ({
+        ...prev,
+        attachmentUrl: res.url,
+        attachmentName: res.fileName,
+        attachmentType: res.fileType
+      }));
+    } catch (err) {
+      console.error('Full class routine file upload failed:', err);
+    } finally {
+      setIsUploadingFullClassFile(false);
+      e.target.value = '';
+    }
+  };
+
+  const addFullClassRoutine = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullClassRoutineForm.attachmentUrl) {
+      alert('দয়া করে সম্পূর্ণ রুটিনের ছবি বা ডকুমেন্ট ফাইলটি নির্বাচন করুন!');
+      return;
+    }
+    const newItem: RoutineItem = {
+      id: 'cr-full-' + Date.now(),
+      className: fullClassRoutineForm.className,
+      subject: fullClassRoutineForm.title || `${fullClassRoutineForm.className} সম্পূর্ণ ক্লাস রুটিন`,
+      teacherName: 'সকল শিক্ষকবৃন্দ',
+      time: 'পূর্ণাঙ্গ সময়সূচী',
+      room: 'শ্রেণীকক্ষ',
+      day: 'Saturday',
+      attachmentUrl: fullClassRoutineForm.attachmentUrl,
+      attachmentName: fullClassRoutineForm.attachmentName,
+      attachmentType: fullClassRoutineForm.attachmentType,
+      isFullRoutine: true,
+      note: fullClassRoutineForm.note || undefined,
+      uploadedAt: new Date().toISOString()
+    };
+    setClassRoutines(prev => [...prev, newItem]);
+    saveClassRoutineToSupabase(newItem);
+    setFullClassRoutineForm(prev => ({
+      ...prev,
+      attachmentUrl: '',
+      attachmentName: '',
+      attachmentType: '',
+      note: ''
+    }));
+  };
+
+  const handleFullExamFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingFullExamFile(true);
+    try {
+      const res = await uploadFileToSupabaseStorage(file, 'exam-routines');
+      setFullExamRoutineForm(prev => ({
+        ...prev,
+        attachmentUrl: res.url,
+        attachmentName: res.fileName,
+        attachmentType: res.fileType
+      }));
+    } catch (err) {
+      console.error('Full exam routine file upload failed:', err);
+    } finally {
+      setIsUploadingFullExamFile(false);
+      e.target.value = '';
+    }
+  };
+
+  const addFullExamRoutine = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullExamRoutineForm.attachmentUrl) {
+      alert('দয়া করে সম্পূর্ণ পরীক্ষার রুটিনের ছবি বা ডকুমেন্ট ফাইলটি নির্বাচন করুন!');
+      return;
+    }
+    const today = new Date().toISOString().split('T')[0];
+    const newItem: ExamRoutineItem = {
+      id: 'er-full-' + Date.now(),
+      className: fullExamRoutineForm.className,
+      subject: fullExamRoutineForm.examTitle || `${fullExamRoutineForm.className} সম্পূর্ণ পরীক্ষার রুটিন`,
+      date: fullExamRoutineForm.dateRange || today,
+      day: 'পূর্ণাঙ্গ সময়সূচী',
+      time: 'রুটিন অনুযায়ী',
+      room: 'সকল নির্ধারিত কক্ষ',
+      attachmentUrl: fullExamRoutineForm.attachmentUrl,
+      attachmentName: fullExamRoutineForm.attachmentName,
+      attachmentType: fullExamRoutineForm.attachmentType,
+      isFullRoutine: true,
+      examTitle: fullExamRoutineForm.examTitle,
+      note: fullExamRoutineForm.note || undefined,
+      uploadedAt: new Date().toISOString()
+    };
+    setExamRoutines(prev => [...prev, newItem]);
+    saveExamRoutineToSupabase(newItem);
+    setFullExamRoutineForm(prev => ({
+      ...prev,
+      attachmentUrl: '',
+      attachmentName: '',
+      attachmentType: '',
+      note: '',
+      dateRange: ''
+    }));
+  };
+
   const handleClassRoutineFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1024,395 +1163,812 @@ export default function AdminPanel({
         </div>
       )}
 
-      {/* -------------------- TAB 3: ROUTINES -------------------- */}
+      {/* -------------------- TAB 3: ROUTINES (DUAL-METHOD CUSTOMIZATION) -------------------- */}
       {activeTab === 'routines' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* Class Routine management */}
-          <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 space-y-6">
-            <h4 className="text-lg font-bold text-blue-950 border-b border-slate-100 pb-2 flex items-center space-x-1.5">
-              <Plus size={18} className="text-blue-900" />
-              <span>ক্লাস রুটিন যোগ করুন</span>
-            </h4>
+        <div className="space-y-8">
 
-            <form onSubmit={addClassRoutine} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">শ্রেণী নির্বাচন</label>
-                <select
-                  value={classRoutineForm.className}
-                  onChange={(e) => setClassRoutineForm(prev => ({ ...prev, className: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                >
-                  {classes.map(cls => (
-                    <option key={cls} value={cls}>{cls}</option>
-                  ))}
-                </select>
+          {/* Explanation Banner */}
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 text-white rounded-2xl shadow-lg border border-blue-800">
+            <div className="flex items-start space-x-3.5">
+              <div className="p-2.5 bg-amber-400 text-blue-950 rounded-xl shrink-0 font-bold mt-0.5">
+                <Sparkles size={20} />
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">বার (Day)</label>
-                <select
-                  value={classRoutineForm.day}
-                  onChange={(e) => setClassRoutineForm(prev => ({ ...prev, day: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                >
-                  <option value="Saturday">শনিবার (Saturday)</option>
-                  <option value="Sunday">রবিবার (Sunday)</option>
-                  <option value="Monday">সোমবার (Monday)</option>
-                  <option value="Tuesday">মঙ্গলবার (Tuesday)</option>
-                  <option value="Wednesday">বুধবার (Wednesday)</option>
-                  <option value="Thursday">বৃহস্পতিবার (Thursday)</option>
-                </select>
+              <div className="space-y-1">
+                <h4 className="text-base sm:text-lg font-bold font-sans flex items-center gap-2">
+                  <span>রুটিন কাস্টমাইজেশন ও প্রকাশনা (সহজ দুটি বিকল্প পদ্ধতি)</span>
+                </h4>
+                <p className="text-xs sm:text-sm text-blue-100 leading-relaxed">
+                  এডমিনের সুবিধার জন্য রুটিন তৈরির <strong>দুটি বিকল্প সুবিধা</strong> রয়েছে—যেকোনো একটি ব্যবহার করাই যথেষ্ট:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 pt-1 text-xs">
+                  <div className="bg-white/10 p-2.5 rounded-xl border border-white/15">
+                    <span className="font-bold text-amber-300 block mb-0.5">🚀 বিকল্প ১: সম্পূর্ণ রুটিন ফাইল/ছবি আপলোড (দ্রুততম)</span>
+                    <span className="text-blue-100">মোবাইল বা কম্পিউটারের ছবি (JPG, PNG), PDF বা Word/Excel ফাইল সরাসরি আপলোড করুন। প্রতিটি বিষয় আলাদা করে টাইপ করার প্রয়োজন নেই।</span>
+                  </div>
+                  <div className="bg-white/10 p-2.5 rounded-xl border border-white/15">
+                    <span className="font-bold text-cyan-300 block mb-0.5">📋 বিকল্প ২: ১টি করে একক বিষয়/পিরিয়ড এন্ট্রি</span>
+                    <span className="text-blue-100">তালিকা আকারে প্রতিটি পিরিয়ড বা পরীক্ষার বিষয়ের সময়, শিক্ষক ও কক্ষ নম্বর আলাদাভাবে ইনপুট দিন।</span>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {/* ==================== CLASS ROUTINE SECTION ==================== */}
+            <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 space-y-5 flex flex-col justify-between">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">বিষয় (Subject)</label>
-                <input
-                  type="text"
-                  required
-                  value={classRoutineForm.subject}
-                  onChange={(e) => setClassRoutineForm(prev => ({ ...prev, subject: e.target.value }))}
-                  placeholder="যেমন: সাধারণ বিজ্ঞান"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">শিক্ষক (Teacher)</label>
-                <input
-                  type="text"
-                  required
-                  value={classRoutineForm.teacherName}
-                  onChange={(e) => setClassRoutineForm(prev => ({ ...prev, teacherName: e.target.value }))}
-                  placeholder="যেমন: মোঃ মতিয়ার ভূঁইয়া"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">সময়সূচী (Time Slot)</label>
-                <input
-                  type="text"
-                  required
-                  value={classRoutineForm.time}
-                  onChange={(e) => setClassRoutineForm(prev => ({ ...prev, time: e.target.value }))}
-                  placeholder="যেমন: ০৯:০০ - ০৯:৪৫ AM"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">কক্ষ নং (Room)</label>
-                <input
-                  type="text"
-                  required
-                  value={classRoutineForm.room}
-                  onChange={(e) => setClassRoutineForm(prev => ({ ...prev, room: e.target.value }))}
-                  placeholder="যেমন: ১০২"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              {/* Routine Document or Image Upload */}
-              <div className="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-xl border border-dashed border-blue-200 space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <label className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
-                    <Paperclip size={14} className="text-blue-700" />
-                    <span>ছবি বা ডকুমেন্ট বা ফাইল যুক্ত করুন (ঐচ্ছিক)</span>
-                  </label>
-                  <span className="text-[11px] text-gray-500">ছবি (JPG, PNG), PDF, Word, Excel বা যেকোন ফরম্যাট</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+                  <h4 className="text-lg font-bold text-blue-950 flex items-center space-x-2">
+                    <BookOpen size={20} className="text-blue-900" />
+                    <span>ক্লাস রুটিন কাস্টমাইজ</span>
+                  </h4>
+                  <span className="text-xs font-semibold px-2.5 py-1 bg-blue-50 text-blue-900 rounded-full border border-blue-200">
+                    মোট এন্ট্রি: {classRoutines.length}
+                  </span>
                 </div>
 
-                {classRoutineForm.attachmentUrl ? (
-                  <div className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-blue-200 text-xs shadow-sm">
-                    <div className="flex items-center space-x-2 truncate">
-                      {classRoutineForm.attachmentType === 'image' ? (
-                        <Image size={16} className="text-emerald-600 shrink-0" />
-                      ) : (
-                        <FileText size={16} className="text-blue-600 shrink-0" />
-                      )}
-                      <span className="font-semibold text-gray-800 truncate" title={classRoutineForm.attachmentName}>
-                        {classRoutineForm.attachmentName || 'সংযুক্ত ফাইল'}
+                {/* Method Switcher Buttons */}
+                <div className="mt-4 bg-slate-100 p-1 rounded-xl flex text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setClassRoutineMode('full_upload')}
+                    className={`flex-1 py-2 px-2.5 rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      classRoutineMode === 'full_upload'
+                        ? 'bg-blue-900 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-blue-900'
+                    }`}
+                  >
+                    <UploadCloud size={14} />
+                    <span>বিকল্প ১: সম্পূর্ণ রুটিন ফাইল/ছবি</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setClassRoutineMode('single_entry')}
+                    className={`flex-1 py-2 px-2.5 rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      classRoutineMode === 'single_entry'
+                        ? 'bg-blue-900 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-blue-900'
+                    }`}
+                  >
+                    <Plus size={14} />
+                    <span>বিকল্প ২: ১টি করে পিরিয়ড এন্ট্রি</span>
+                  </button>
+                </div>
+
+                {/* METHOD 1: FULL CLASS ROUTINE FILE UPLOAD */}
+                {classRoutineMode === 'full_upload' && (
+                  <form onSubmit={addFullClassRoutine} className="mt-5 space-y-4 bg-blue-50/40 p-4 rounded-xl border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+                        <Sparkles size={14} className="text-amber-500" />
+                        এক ক্লিকে সম্পূর্ণ ক্লাসের রুটিন প্রকাশ করুন
                       </span>
-                      <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[10px] uppercase">
-                        {classRoutineForm.attachmentType || 'file'}
-                      </span>
+                      <span className="text-[11px] text-gray-500">ছবি/PDF/Word/Excel</span>
                     </div>
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <a 
-                        href={classRoutineForm.attachmentUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline font-bold flex items-center gap-0.5 text-xs"
-                      >
-                        <Eye size={12} />
-                        <span>দেখুন</span>
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => setClassRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
-                        className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
-                        title="ফাইল মুছে ফেলুন"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="flex items-center justify-center space-x-2 py-3 px-4 bg-white border border-gray-300 hover:border-blue-400 rounded-lg cursor-pointer transition text-xs font-medium text-gray-700 hover:text-blue-900 shadow-sm">
-                    {isUploadingClassFile ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin text-blue-700" />
-                        <span>ফাইল আপলোড হচ্ছে...</span>
-                      </>
-                    ) : (
-                      <>
-                        <UploadCloud size={16} className="text-blue-700" />
-                        <span>কম্পিউটার/মোবাইল থেকে ছবি বা ডকুমেন্ট আপলোড করুন</span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">শ্রেণী নির্বাচন</label>
+                        <select
+                          value={fullClassRoutineForm.className}
+                          onChange={(e) => setFullClassRoutineForm(prev => ({ ...prev, className: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                        >
+                          {classes.map(cls => (
+                            <option key={cls} value={cls}>{cls}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">রুটিনের শিরোনাম</label>
                         <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                          onChange={handleClassRoutineFileUpload}
+                          type="text"
+                          required
+                          value={fullClassRoutineForm.title}
+                          onChange={(e) => setFullClassRoutineForm(prev => ({ ...prev, title: e.target.value }))}
+                          placeholder="যেমন: প্লে শ্রেণীর সম্পূর্ণ ক্লাস রুটিন"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                      </>
-                    )}
-                  </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 mb-1">রুটিন সংক্রান্ত নোট বা নির্দেশনা (ঐচ্ছিক)</label>
+                      <input
+                        type="text"
+                        value={fullClassRoutineForm.note}
+                        onChange={(e) => setFullClassRoutineForm(prev => ({ ...prev, note: e.target.value }))}
+                        placeholder="যেমন: সকল শিক্ষার্থীকে সকাল ৯:০০ টার পূর্বে উপস্থিত হতে হবে"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {/* File Attachment Dropzone */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 mb-1">সম্পূর্ণ রুটিন ফাইল বা ছবি নির্বাচন করুন *</label>
+                      {fullClassRoutineForm.attachmentUrl ? (
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-300 text-xs shadow-sm">
+                          <div className="flex items-center space-x-2 truncate">
+                            {fullClassRoutineForm.attachmentType === 'image' ? (
+                              <Image size={18} className="text-emerald-600 shrink-0" />
+                            ) : (
+                              <FileText size={18} className="text-blue-600 shrink-0" />
+                            )}
+                            <div className="truncate">
+                              <p className="font-bold text-gray-800 truncate" title={fullClassRoutineForm.attachmentName}>
+                                {fullClassRoutineForm.attachmentName || 'রুটিন ফাইল'}
+                              </p>
+                              <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                                {fullClassRoutineForm.attachmentType || 'file'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2 shrink-0">
+                            <a
+                              href={fullClassRoutineForm.attachmentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline font-bold flex items-center gap-1 text-xs"
+                            >
+                              <Eye size={12} />
+                              <span>দেখুন</span>
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => setFullClassRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
+                              className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
+                              title="ফাইল মুছে ফেলুন"
+                            >
+                              <X size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center p-5 bg-white border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl cursor-pointer transition text-center shadow-sm">
+                          {isUploadingFullClassFile ? (
+                            <div className="flex flex-col items-center space-y-1">
+                              <Loader2 size={24} className="animate-spin text-blue-700" />
+                              <span className="text-xs font-bold text-blue-900">ফাইল আপলোড হচ্ছে...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <UploadCloud size={28} className="text-blue-700 mb-1" />
+                              <span className="text-xs font-bold text-blue-950">
+                                কম্পিউটারের বা মোবাইলের যেকোনো ফরম্যাটের রুটিন ফাইল এখানে আপলোড করুন
+                              </span>
+                              <span className="text-[11px] text-gray-500 mt-0.5">
+                                JPG, PNG, WebP, PDF, DOCX, XLSX ইত্যাদি যেকোনো ফাইল সমর্থিত
+                              </span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                                onChange={handleFullClassFileUpload}
+                              />
+                            </>
+                          )}
+                        </label>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isUploadingFullClassFile || !fullClassRoutineForm.attachmentUrl}
+                      className="w-full py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 text-white font-bold rounded-lg text-xs cursor-pointer transition flex items-center justify-center space-x-2 shadow-sm"
+                    >
+                      <Sparkles size={14} />
+                      <span>{fullClassRoutineForm.className} শ্রেণীর সম্পূর্ণ রুটিন প্রকাশ করুন</span>
+                    </button>
+                  </form>
+                )}
+
+                {/* METHOD 2: SINGLE PERIOD MANUAL ENTRY */}
+                {classRoutineMode === 'single_entry' && (
+                  <form onSubmit={addClassRoutine} className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">শ্রেণী নির্বাচন</label>
+                      <select
+                        value={classRoutineForm.className}
+                        onChange={(e) => setClassRoutineForm(prev => ({ ...prev, className: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white font-bold"
+                      >
+                        {classes.map(cls => (
+                          <option key={cls} value={cls}>{cls}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">বার (Day)</label>
+                      <select
+                        value={classRoutineForm.day}
+                        onChange={(e) => setClassRoutineForm(prev => ({ ...prev, day: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white font-bold"
+                      >
+                        <option value="Saturday">শনিবার (Saturday)</option>
+                        <option value="Sunday">রবিবার (Sunday)</option>
+                        <option value="Monday">সোমবার (Monday)</option>
+                        <option value="Tuesday">মঙ্গলবার (Tuesday)</option>
+                        <option value="Wednesday">বুধবার (Wednesday)</option>
+                        <option value="Thursday">বৃহস্পতিবার (Thursday)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">বিষয় (Subject)</label>
+                      <input
+                        type="text"
+                        required
+                        value={classRoutineForm.subject}
+                        onChange={(e) => setClassRoutineForm(prev => ({ ...prev, subject: e.target.value }))}
+                        placeholder="যেমন: বাংলা / গণিত"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">শিক্ষক (Teacher)</label>
+                      <input
+                        type="text"
+                        required
+                        value={classRoutineForm.teacherName}
+                        onChange={(e) => setClassRoutineForm(prev => ({ ...prev, teacherName: e.target.value }))}
+                        placeholder="যেমন: মোঃ মতিয়ার ভূঁইয়া"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">সময়সূচী (Time Slot)</label>
+                      <input
+                        type="text"
+                        required
+                        value={classRoutineForm.time}
+                        onChange={(e) => setClassRoutineForm(prev => ({ ...prev, time: e.target.value }))}
+                        placeholder="যেমন: ০৯:০০ - ০৯:৪৫ AM"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">কক্ষ নং (Room)</label>
+                      <input
+                        type="text"
+                        required
+                        value={classRoutineForm.room}
+                        onChange={(e) => setClassRoutineForm(prev => ({ ...prev, room: e.target.value }))}
+                        placeholder="যেমন: ১০২"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+
+                    {/* Single Period File Upload (Optional) */}
+                    <div className="sm:col-span-2 bg-white p-3 rounded-lg border border-dashed border-gray-300 space-y-1.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-gray-700 flex items-center gap-1">
+                          <Paperclip size={13} />
+                          এই পিরিয়ডের জন্য ফাইল/নোট (ঐচ্ছিক)
+                        </span>
+                        <span className="text-[10px] text-gray-400">ছবি বা ডকুমেন্ট</span>
+                      </div>
+                      {classRoutineForm.attachmentUrl ? (
+                        <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-gray-200 text-xs">
+                          <span className="font-semibold text-gray-700 truncate">{classRoutineForm.attachmentName || 'ফাইল'}</span>
+                          <button
+                            type="button"
+                            onClick={() => setClassRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
+                            className="text-rose-600 hover:text-rose-800 p-1"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex items-center justify-center gap-2 py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded border border-gray-200 text-xs text-gray-600 cursor-pointer">
+                          {isUploadingClassFile ? <Loader2 size={14} className="animate-spin text-blue-700" /> : <UploadCloud size={14} className="text-blue-700" />}
+                          <span>{isUploadingClassFile ? 'আপলোড হচ্ছে...' : 'কম্পিউটার/মোবাইল থেকে ফাইল নির্বাচন'}</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                            onChange={handleClassRoutineFileUpload}
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isUploadingClassFile}
+                      className="sm:col-span-2 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 text-white font-bold rounded-lg text-xs cursor-pointer transition flex items-center justify-center space-x-2 shadow-sm"
+                    >
+                      <Plus size={15} />
+                      <span>একক পিরিয়ড হিসেবে যোগ করুন</span>
+                    </button>
+                  </form>
                 )}
               </div>
 
-              <button
-                type="submit"
-                disabled={isUploadingClassFile}
-                className="sm:col-span-2 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 text-white font-bold rounded-lg text-sm cursor-pointer mt-2 transition-colors flex items-center justify-center space-x-2 shadow-sm"
-              >
-                <Plus size={16} />
-                <span>ক্লাস রুটিনে যোগ করুন</span>
-              </button>
-            </form>
-
-            <div className="border-t border-gray-100 pt-4 space-y-2">
-              <h5 className="text-xs font-bold text-gray-400">বর্তমান ক্লাস রুটিন আইটেমসমূহ:</h5>
-              <div className="max-h-[300px] overflow-y-auto space-y-2">
-                {classRoutines.map(cr => (
-                  <div key={cr.id} className="p-2.5 bg-slate-50 hover:bg-slate-100/70 transition-colors rounded-lg border border-slate-100 text-xs flex justify-between items-start">
-                    <div className="space-y-0.5">
-                      <p className="font-bold text-blue-950">{cr.className} - {cr.subject}</p>
-                      <p className="text-gray-500">{cr.day} | {cr.time} | কক্ষ: {cr.room} | শিক্ষক: {cr.teacherName}</p>
-                      {cr.attachmentUrl && (
-                        <a
-                          href={cr.attachmentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors"
-                          title={cr.attachmentName}
-                        >
-                          <Paperclip size={11} />
-                          <span>সংযুক্ত {cr.attachmentType === 'image' ? 'ছবি' : 'ডকুমেন্ট'}: {cr.attachmentName ? (cr.attachmentName.length > 25 ? cr.attachmentName.substring(0, 25) + '...' : cr.attachmentName) : 'ফাইল দেখুন'}</span>
-                          <ExternalLink size={10} />
-                        </a>
-                      )}
-                    </div>
-                    <button onClick={() => deleteClassRoutine(cr.id)} className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer shrink-0 ml-2" title="মুছে ফেলুন">
-                      <Trash2 size={14} />
-                    </button>
+              {/* Class Routines Current List with Filter */}
+              <div className="border-t border-gray-100 pt-4 space-y-3 mt-4">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-xs font-bold text-gray-500">বর্তমান ক্লাস রুটিন তালিকা:</h5>
+                  <div className="flex items-center space-x-1.5 text-xs">
+                    <Filter size={12} className="text-gray-400" />
+                    <select
+                      value={classRoutineFilter}
+                      onChange={(e) => setClassRoutineFilter(e.target.value)}
+                      className="px-2 py-1 bg-slate-50 border border-gray-200 rounded text-[11px] font-bold text-gray-700"
+                    >
+                      <option value="all">সকল শ্রেণী</option>
+                      {classes.map(cls => (
+                        <option key={cls} value={cls}>{cls}</option>
+                      ))}
+                    </select>
                   </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-
-          {/* Exam Routine management */}
-          <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 space-y-6">
-            <h4 className="text-lg font-bold text-blue-950 border-b border-slate-100 pb-2 flex items-center space-x-1.5">
-              <Plus size={18} className="text-blue-900" />
-              <span>পরীক্ষার রুটিন যোগ করুন</span>
-            </h4>
-
-            <form onSubmit={addExamRoutine} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">শ্রেণী নির্বাচন</label>
-                <select
-                  value={examRoutineForm.className}
-                  onChange={(e) => setExamRoutineForm(prev => ({ ...prev, className: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                >
-                  {classes.map(cls => (
-                    <option key={cls} value={cls}>{cls}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">পরীক্ষার তারিখ</label>
-                <input
-                  type="date"
-                  required
-                  value={examRoutineForm.date}
-                  onChange={(e) => setExamRoutineForm(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">বার (যেমন: বুধবার)</label>
-                <input
-                  type="text"
-                  required
-                  value={examRoutineForm.day}
-                  onChange={(e) => setExamRoutineForm(prev => ({ ...prev, day: e.target.value }))}
-                  placeholder="যেমন: বুধবার"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">বিষয় (Subject)</label>
-                <input
-                  type="text"
-                  required
-                  value={examRoutineForm.subject}
-                  onChange={(e) => setExamRoutineForm(prev => ({ ...prev, subject: e.target.value }))}
-                  placeholder="যেমন: প্রাথমিক গণিত"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">সময়সূচী (Time Slot)</label>
-                <input
-                  type="text"
-                  required
-                  value={examRoutineForm.time}
-                  onChange={(e) => setExamRoutineForm(prev => ({ ...prev, time: e.target.value }))}
-                  placeholder="যেমন: ১০:০০ - ০১:০০ PM"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">পরীক্ষা কক্ষ</label>
-                <input
-                  type="text"
-                  required
-                  value={examRoutineForm.room}
-                  onChange={(e) => setExamRoutineForm(prev => ({ ...prev, room: e.target.value }))}
-                  placeholder="যেমন: ২০১"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
-                />
-              </div>
-
-              {/* Exam Routine Document or Image Upload */}
-              <div className="sm:col-span-2 bg-blue-50/60 p-3.5 rounded-xl border border-dashed border-blue-200 space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <label className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
-                    <Paperclip size={14} className="text-blue-700" />
-                    <span>পরীক্ষার রুটিন ছবি বা ডকুমেন্ট যুক্ত করুন (ঐচ্ছিক)</span>
-                  </label>
-                  <span className="text-[11px] text-gray-500">ছবি (JPG, PNG), PDF, Word, Excel বা যেকোন ফরম্যাট</span>
                 </div>
 
-                {examRoutineForm.attachmentUrl ? (
-                  <div className="flex items-center justify-between p-2.5 bg-white rounded-lg border border-blue-200 text-xs shadow-sm">
-                    <div className="flex items-center space-x-2 truncate">
-                      {examRoutineForm.attachmentType === 'image' ? (
-                        <Image size={16} className="text-emerald-600 shrink-0" />
-                      ) : (
-                        <FileText size={16} className="text-blue-600 shrink-0" />
-                      )}
-                      <span className="font-semibold text-gray-800 truncate" title={examRoutineForm.attachmentName}>
-                        {examRoutineForm.attachmentName || 'সংযুক্ত ফাইল'}
+                <div className="max-h-[320px] overflow-y-auto space-y-2 pr-1">
+                  {classRoutines
+                    .filter(cr => classRoutineFilter === 'all' || cr.className === classRoutineFilter)
+                    .map(cr => {
+                      const isFull = Boolean(cr.isFullRoutine || cr.time === 'পূর্ণাঙ্গ সময়সূচী');
+                      return (
+                        <div key={cr.id} className={`p-3 rounded-xl border transition-colors text-xs flex justify-between items-start ${
+                          isFull 
+                            ? 'bg-gradient-to-r from-purple-50/80 to-blue-50/60 border-purple-200' 
+                            : 'bg-slate-50 hover:bg-slate-100/70 border-slate-200'
+                        }`}>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-blue-950 text-sm">{cr.className}</span>
+                              {isFull ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 font-bold text-[10px]">
+                                  <Sparkles size={10} />
+                                  <span>সম্পূর্ণ রুটিন ফাইল</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold text-[10px]">
+                                  <span>একক পিরিয়ড</span>
+                                </span>
+                              )}
+                              <span className="font-bold text-gray-800">— {cr.subject}</span>
+                            </div>
+
+                            {isFull ? (
+                              <p className="text-gray-600 text-[11px]">
+                                {cr.note || 'সম্পূর্ণ ক্লাসের সময়সূচী ফাইল সংযুক্ত'}
+                              </p>
+                            ) : (
+                              <p className="text-gray-500">
+                                {cr.day} | {cr.time} | কক্ষ: {cr.room} | শিক্ষক: {cr.teacherName}
+                              </p>
+                            )}
+
+                            {cr.attachmentUrl && (
+                              <div className="pt-1 flex items-center gap-2">
+                                <a
+                                  href={cr.attachmentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-white px-2 py-0.5 rounded border border-blue-200 shadow-2xs"
+                                  title={cr.attachmentName}
+                                >
+                                  {cr.attachmentType === 'image' ? <Image size={11} className="text-emerald-600" /> : <FileText size={11} className="text-blue-600" />}
+                                  <span>{cr.attachmentName ? (cr.attachmentName.length > 25 ? cr.attachmentName.substring(0, 25) + '...' : cr.attachmentName) : 'ফাইল দেখুন'}</span>
+                                  <ExternalLink size={10} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => deleteClassRoutine(cr.id)}
+                            className="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer shrink-0 ml-2 transition"
+                            title="মুছে ফেলুন"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* ==================== EXAM ROUTINE SECTION ==================== */}
+            <div className="bg-white rounded-2xl p-6 shadow-md border border-slate-100 space-y-5 flex flex-col justify-between">
+              <div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+                  <h4 className="text-lg font-bold text-blue-950 flex items-center space-x-2">
+                    <Calendar size={20} className="text-blue-900" />
+                    <span>পরীক্ষার রুটিন কাস্টমাইজ</span>
+                  </h4>
+                  <span className="text-xs font-semibold px-2.5 py-1 bg-blue-50 text-blue-900 rounded-full border border-blue-200">
+                    মোট এন্ট্রি: {examRoutines.length}
+                  </span>
+                </div>
+
+                {/* Method Switcher Buttons */}
+                <div className="mt-4 bg-slate-100 p-1 rounded-xl flex text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setExamRoutineMode('full_upload')}
+                    className={`flex-1 py-2 px-2.5 rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      examRoutineMode === 'full_upload'
+                        ? 'bg-blue-900 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-blue-900'
+                    }`}
+                  >
+                    <UploadCloud size={14} />
+                    <span>বিকল্প ১: সম্পূর্ণ পরীক্ষার রুটিন ফাইল</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExamRoutineMode('single_entry')}
+                    className={`flex-1 py-2 px-2.5 rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      examRoutineMode === 'single_entry'
+                        ? 'bg-blue-900 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-blue-900'
+                    }`}
+                  >
+                    <Plus size={14} />
+                    <span>বিকল্প ২: ১টি করে বিষয় এন্ট্রি</span>
+                  </button>
+                </div>
+
+                {/* METHOD 1: FULL EXAM ROUTINE FILE UPLOAD */}
+                {examRoutineMode === 'full_upload' && (
+                  <form onSubmit={addFullExamRoutine} className="mt-5 space-y-4 bg-blue-50/40 p-4 rounded-xl border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+                        <Sparkles size={14} className="text-amber-500" />
+                        এক ক্লিকে সম্পূর্ণ পরীক্ষার রুটিন প্রকাশ করুন
                       </span>
-                      <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold text-[10px] uppercase">
-                        {examRoutineForm.attachmentType || 'file'}
-                      </span>
+                      <span className="text-[11px] text-gray-500">ছবি/PDF/Word/Excel</span>
                     </div>
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <a 
-                        href={examRoutineForm.attachmentUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline font-bold flex items-center gap-0.5 text-xs"
-                      >
-                        <Eye size={12} />
-                        <span>দেখুন</span>
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => setExamRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
-                        className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
-                        title="ফাইল মুছে ফেলুন"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="flex items-center justify-center space-x-2 py-3 px-4 bg-white border border-gray-300 hover:border-blue-400 rounded-lg cursor-pointer transition text-xs font-medium text-gray-700 hover:text-blue-900 shadow-sm">
-                    {isUploadingExamFile ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin text-blue-700" />
-                        <span>ফাইল আপলোড হচ্ছে...</span>
-                      </>
-                    ) : (
-                      <>
-                        <UploadCloud size={16} className="text-blue-700" />
-                        <span>কম্পিউটার/মোবাইল থেকে ছবি বা ডকুমেন্ট আপলোড করুন</span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">শ্রেণী নির্বাচন</label>
+                        <select
+                          value={fullExamRoutineForm.className}
+                          onChange={(e) => setFullExamRoutineForm(prev => ({ ...prev, className: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                        >
+                          {classes.map(cls => (
+                            <option key={cls} value={cls}>{cls}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">পরীক্ষার নাম / শিরোনাম</label>
                         <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                          onChange={handleExamRoutineFileUpload}
+                          type="text"
+                          required
+                          value={fullExamRoutineForm.examTitle}
+                          onChange={(e) => setFullExamRoutineForm(prev => ({ ...prev, examTitle: e.target.value }))}
+                          placeholder="যেমন: বার্ষিক পরীক্ষা ২০২৫"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                         />
-                      </>
-                    )}
-                  </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">তারিখের ব্যাপ্তি (ঐচ্ছিক)</label>
+                        <input
+                          type="text"
+                          value={fullExamRoutineForm.dateRange}
+                          onChange={(e) => setFullExamRoutineForm(prev => ({ ...prev, dateRange: e.target.value }))}
+                          placeholder="যেমন: ১০ ডিসেম্বর - ২৫ ডিসেম্বর ২০২৫"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">নির্দেশনা বা নোট (ঐচ্ছিক)</label>
+                        <input
+                          type="text"
+                          value={fullExamRoutineForm.note}
+                          onChange={(e) => setFullExamRoutineForm(prev => ({ ...prev, note: e.target.value }))}
+                          placeholder="যেমন: প্রবেশপত্র ছাড়া পরীক্ষা কক্ষে প্রবেশ নিষেধ"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* File Attachment Dropzone */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 mb-1">সম্পূর্ণ পরীক্ষার রুটিন ফাইল বা ছবি নির্বাচন করুন *</label>
+                      {fullExamRoutineForm.attachmentUrl ? (
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-300 text-xs shadow-sm">
+                          <div className="flex items-center space-x-2 truncate">
+                            {fullExamRoutineForm.attachmentType === 'image' ? (
+                              <Image size={18} className="text-emerald-600 shrink-0" />
+                            ) : (
+                              <FileText size={18} className="text-blue-600 shrink-0" />
+                            )}
+                            <div className="truncate">
+                              <p className="font-bold text-gray-800 truncate" title={fullExamRoutineForm.attachmentName}>
+                                {fullExamRoutineForm.attachmentName || 'পরীক্ষার রুটিন ফাইল'}
+                              </p>
+                              <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                                {fullExamRoutineForm.attachmentType || 'file'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2 shrink-0">
+                            <a
+                              href={fullExamRoutineForm.attachmentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline font-bold flex items-center gap-1 text-xs"
+                            >
+                              <Eye size={12} />
+                              <span>দেখুন</span>
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => setFullExamRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
+                              className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
+                              title="ফাইল মুছে ফেলুন"
+                            >
+                              <X size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center p-5 bg-white border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl cursor-pointer transition text-center shadow-sm">
+                          {isUploadingFullExamFile ? (
+                            <div className="flex flex-col items-center space-y-1">
+                              <Loader2 size={24} className="animate-spin text-blue-700" />
+                              <span className="text-xs font-bold text-blue-900">ফাইল আপলোড হচ্ছে...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <UploadCloud size={28} className="text-blue-700 mb-1" />
+                              <span className="text-xs font-bold text-blue-950">
+                                পুরো পরীক্ষার রুটিন ছবি বা ফাইলটি এখানে আপলোড করুন
+                              </span>
+                              <span className="text-[11px] text-gray-500 mt-0.5">
+                                JPG, PNG, WebP, PDF, DOCX, XLSX ইত্যাদি যেকোনো ফাইল সমর্থিত
+                              </span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                                onChange={handleFullExamFileUpload}
+                              />
+                            </>
+                          )}
+                        </label>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isUploadingFullExamFile || !fullExamRoutineForm.attachmentUrl}
+                      className="w-full py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 text-white font-bold rounded-lg text-xs cursor-pointer transition flex items-center justify-center space-x-2 shadow-sm"
+                    >
+                      <Sparkles size={14} />
+                      <span>{fullExamRoutineForm.className} শ্রেণীর সম্পূর্ণ পরীক্ষার রুটিন প্রকাশ করুন</span>
+                    </button>
+                  </form>
+                )}
+
+                {/* METHOD 2: SINGLE EXAM SUBJECT ENTRY */}
+                {examRoutineMode === 'single_entry' && (
+                  <form onSubmit={addExamRoutine} className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">শ্রেণী নির্বাচন</label>
+                      <select
+                        value={examRoutineForm.className}
+                        onChange={(e) => setExamRoutineForm(prev => ({ ...prev, className: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white font-bold"
+                      >
+                        {classes.map(cls => (
+                          <option key={cls} value={cls}>{cls}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">পরীক্ষার তারিখ</label>
+                      <input
+                        type="date"
+                        required
+                        value={examRoutineForm.date}
+                        onChange={(e) => setExamRoutineForm(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">বার (যেমন: বুধবার)</label>
+                      <input
+                        type="text"
+                        required
+                        value={examRoutineForm.day}
+                        onChange={(e) => setExamRoutineForm(prev => ({ ...prev, day: e.target.value }))}
+                        placeholder="যেমন: বুধবার"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">বিষয় (Subject)</label>
+                      <input
+                        type="text"
+                        required
+                        value={examRoutineForm.subject}
+                        onChange={(e) => setExamRoutineForm(prev => ({ ...prev, subject: e.target.value }))}
+                        placeholder="যেমন: প্রাথমিক গণিত"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">সময়সূচী (Time Slot)</label>
+                      <input
+                        type="text"
+                        required
+                        value={examRoutineForm.time}
+                        onChange={(e) => setExamRoutineForm(prev => ({ ...prev, time: e.target.value }))}
+                        placeholder="যেমন: ১০:০০ - ০১:০০ PM"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">পরীক্ষা কক্ষ</label>
+                      <input
+                        type="text"
+                        required
+                        value={examRoutineForm.room}
+                        onChange={(e) => setExamRoutineForm(prev => ({ ...prev, room: e.target.value }))}
+                        placeholder="যেমন: ২০১"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white"
+                      />
+                    </div>
+
+                    {/* Single Subject File Attachment */}
+                    <div className="sm:col-span-2 bg-white p-3 rounded-lg border border-dashed border-gray-300 space-y-1.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-gray-700 flex items-center gap-1">
+                          <Paperclip size={13} />
+                          এই পরীক্ষার জন্য ফাইল/সিলেবাস (ঐচ্ছিক)
+                        </span>
+                        <span className="text-[10px] text-gray-400">ছবি বা ডকুমেন্ট</span>
+                      </div>
+                      {examRoutineForm.attachmentUrl ? (
+                        <div className="flex items-center justify-between p-2 bg-slate-50 rounded border border-gray-200 text-xs">
+                          <span className="font-semibold text-gray-700 truncate">{examRoutineForm.attachmentName || 'ফাইল'}</span>
+                          <button
+                            type="button"
+                            onClick={() => setExamRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
+                            className="text-rose-600 hover:text-rose-800 p-1"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex items-center justify-center gap-2 py-2 px-3 bg-slate-50 hover:bg-slate-100 rounded border border-gray-200 text-xs text-gray-600 cursor-pointer">
+                          {isUploadingExamFile ? <Loader2 size={14} className="animate-spin text-blue-700" /> : <UploadCloud size={14} className="text-blue-700" />}
+                          <span>{isUploadingExamFile ? 'আপলোড হচ্ছে...' : 'কম্পিউটার/মোবাইল থেকে ফাইল নির্বাচন'}</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                            onChange={handleExamRoutineFileUpload}
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isUploadingExamFile}
+                      className="sm:col-span-2 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 text-white font-bold rounded-lg text-xs cursor-pointer transition flex items-center justify-center space-x-2 shadow-sm"
+                    >
+                      <Plus size={15} />
+                      <span>একক বিষয় হিসেবে যোগ করুন</span>
+                    </button>
+                  </form>
                 )}
               </div>
 
-              <button
-                type="submit"
-                disabled={isUploadingExamFile}
-                className="sm:col-span-2 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-gray-400 text-white font-bold rounded-lg text-sm cursor-pointer mt-2 transition-colors flex items-center justify-center space-x-2 shadow-sm"
-              >
-                <Plus size={16} />
-                <span>পরীক্ষার রুটিনে যোগ করুন</span>
-              </button>
-            </form>
-
-            <div className="border-t border-gray-100 pt-4 space-y-2">
-              <h5 className="text-xs font-bold text-gray-400">বর্তমান পরীক্ষার রুটিন আইটেমসমূহ:</h5>
-              <div className="max-h-[300px] overflow-y-auto space-y-2">
-                {examRoutines.map(er => (
-                  <div key={er.id} className="p-2.5 bg-slate-50 hover:bg-slate-100/70 transition-colors rounded-lg border border-slate-100 text-xs flex justify-between items-start">
-                    <div className="space-y-0.5">
-                      <p className="font-bold text-blue-950">{er.className} - {er.subject}</p>
-                      <p className="text-gray-500">{er.date} ({er.day}) | {er.time} | কক্ষ: {er.room}</p>
-                      {er.attachmentUrl && (
-                        <a
-                          href={er.attachmentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors"
-                          title={er.attachmentName}
-                        >
-                          <Paperclip size={11} />
-                          <span>সংযুক্ত {er.attachmentType === 'image' ? 'ছবি' : 'ডকুমেন্ট'}: {er.attachmentName ? (er.attachmentName.length > 25 ? er.attachmentName.substring(0, 25) + '...' : er.attachmentName) : 'ফাইল দেখুন'}</span>
-                          <ExternalLink size={10} />
-                        </a>
-                      )}
-                    </div>
-                    <button onClick={() => deleteExamRoutine(er.id)} className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer shrink-0 ml-2" title="মুছে ফেলুন">
-                      <Trash2 size={14} />
-                    </button>
+              {/* Exam Routines Current List with Filter */}
+              <div className="border-t border-gray-100 pt-4 space-y-3 mt-4">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-xs font-bold text-gray-500">বর্তমান পরীক্ষার রুটিন তালিকা:</h5>
+                  <div className="flex items-center space-x-1.5 text-xs">
+                    <Filter size={12} className="text-gray-400" />
+                    <select
+                      value={examRoutineFilter}
+                      onChange={(e) => setExamRoutineFilter(e.target.value)}
+                      className="px-2 py-1 bg-slate-50 border border-gray-200 rounded text-[11px] font-bold text-gray-700"
+                    >
+                      <option value="all">সকল শ্রেণী</option>
+                      {classes.map(cls => (
+                        <option key={cls} value={cls}>{cls}</option>
+                      ))}
+                    </select>
                   </div>
-                ))}
+                </div>
+
+                <div className="max-h-[320px] overflow-y-auto space-y-2 pr-1">
+                  {examRoutines
+                    .filter(er => examRoutineFilter === 'all' || er.className === examRoutineFilter)
+                    .map(er => {
+                      const isFull = Boolean(er.isFullRoutine || er.day === 'পূর্ণাঙ্গ সময়সূচী');
+                      return (
+                        <div key={er.id} className={`p-3 rounded-xl border transition-colors text-xs flex justify-between items-start ${
+                          isFull 
+                            ? 'bg-gradient-to-r from-purple-50/80 to-blue-50/60 border-purple-200' 
+                            : 'bg-slate-50 hover:bg-slate-100/70 border-slate-200'
+                        }`}>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-blue-950 text-sm">{er.className}</span>
+                              {isFull ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 font-bold text-[10px]">
+                                  <Sparkles size={10} />
+                                  <span>সম্পূর্ণ পরীক্ষার রুটিন ফাইল</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold text-[10px]">
+                                  <span>একক বিষয়</span>
+                                </span>
+                              )}
+                              <span className="font-bold text-gray-800">— {er.subject}</span>
+                            </div>
+
+                            {isFull ? (
+                              <p className="text-gray-600 text-[11px]">
+                                {er.note ? `${er.date} • ${er.note}` : `${er.date} • সম্পূর্ণ পরীক্ষার রুটিন ফাইল সংযুক্ত`}
+                              </p>
+                            ) : (
+                              <p className="text-gray-500">
+                                {er.date} ({er.day}) | {er.time} | কক্ষ: {er.room}
+                              </p>
+                            )}
+
+                            {er.attachmentUrl && (
+                              <div className="pt-1 flex items-center gap-2">
+                                <a
+                                  href={er.attachmentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-white px-2 py-0.5 rounded border border-blue-200 shadow-2xs"
+                                  title={er.attachmentName}
+                                >
+                                  {er.attachmentType === 'image' ? <Image size={11} className="text-emerald-600" /> : <FileText size={11} className="text-blue-600" />}
+                                  <span>{er.attachmentName ? (er.attachmentName.length > 25 ? er.attachmentName.substring(0, 25) + '...' : er.attachmentName) : 'ফাইল দেখুন'}</span>
+                                  <ExternalLink size={10} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => deleteExamRoutine(er.id)}
+                            className="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer shrink-0 ml-2 transition"
+                            title="মুছে ফেলুন"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
+
             </div>
 
           </div>
-
         </div>
       )}
 

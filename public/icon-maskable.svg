@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="mBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="50%" stop-color="#172554" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="mGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+
+  <!-- Full Bleed Background for Android adaptive icon cropping -->
+  <rect width="512" height="512" fill="url(#mBgGrad)" />
+
+  <!-- Inner Content scaled into 80% safe zone with transform -->
+  <g transform="translate(51.2, 51.2) scale(0.8)">
+    <!-- Gold Ring -->
+    <circle cx="256" cy="256" r="230" fill="none" stroke="#f59e0b" stroke-width="10" />
+
+    <!-- Sun Arc -->
+    <path d="M 176 210 A 80 80 0 0 1 336 210 Z" fill="url(#mGoldGrad)" />
+
+    <!-- Cap -->
+    <polygon points="256,120 370,165 256,205 142,165" fill="#f59e0b" stroke="#ffffff" stroke-width="3" />
+    <path d="M 180 183 L 180 220 C 180 245 332 245 332 220 L 332 183" fill="#d97706" />
+    <path d="M 360 170 Q 375 200 372 235" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" />
+    <circle cx="372" cy="240" r="6" fill="#fef08a" />
+
+    <!-- Book -->
+    <path d="M 130 330 C 180 300 240 315 256 335 C 272 315 332 300 382 330 L 382 355 C 332 325 272 340 256 360 C 240 340 180 325 130 355 Z" fill="#b45309" />
+    <path d="M 130 320 C 180 290 240 305 256 325 L 256 350 C 240 330 180 315 130 345 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+    <path d="M 382 320 C 332 290 272 305 256 325 L 256 350 C 272 330 332 315 382 345 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+
+    <!-- Laurel -->
+    <g fill="#10b981">
+      <ellipse cx="110" cy="240" rx="14" ry="7" transform="rotate(-35, 110, 240)" />
+      <ellipse cx="100" cy="275" rx="14" ry="7" transform="rotate(-15, 100, 275)" />
+      <ellipse cx="100" cy="310" rx="14" ry="7" transform="rotate(10, 100, 310)" />
+      <ellipse cx="112" cy="345" rx="14" ry="7" transform="rotate(30, 112, 345)" />
+
+      <ellipse cx="402" cy="240" rx="14" ry="7" transform="rotate(35, 402, 240)" />
+      <ellipse cx="412" cy="275" rx="14" ry="7" transform="rotate(15, 412, 275)" />
+      <ellipse cx="412" cy="310" rx="14" ry="7" transform="rotate(-10, 412, 310)" />
+      <ellipse cx="400" cy="345" rx="14" ry="7" transform="rotate(-30, 400, 345)" />
+    </g>
+
+    <!-- ESTD -->
+    <rect x="120" y="395" width="272" height="40" rx="8" fill="url(#mGoldGrad)" />
+    <text x="256" y="423" font-family="system-ui, sans-serif" font-size="20" font-weight="900" text-anchor="middle" fill="#1e3a8a">
+      ESTD - 2011
+    </text>
+  </g>
+</svg>

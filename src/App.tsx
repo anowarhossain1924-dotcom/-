@@ -7,6 +7,8 @@ import Routines from './components/Routines';
 import AboutSchool from './components/AboutSchool';
 import AdminPanel from './components/AdminPanel';
 import Footer from './components/Footer';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { PWAInstallButton } from './components/PWAInstallButton';
 
 import { 
   Notice, 
@@ -146,6 +148,11 @@ export default function App() {
             
             {/* Hero Slider */}
             <Hero banners={banners} setView={setView} />
+
+            {/* Android & Desktop App Install Banner */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 no-print">
+              <PWAInstallButton variant="full" />
+            </section>
 
             {/* News Feed / Notice Board Widget - HIGHEST PRIORITY ON HOMEPAGE */}
             <NoticeBoard notices={notices} isHomepage={true} setView={setView} />
@@ -348,6 +355,9 @@ export default function App() {
 
       {/* Footer */}
       <Footer info={schoolInfo} />
+
+      {/* Offline Connectivity Status Toast */}
+      <OfflineIndicator />
 
     </div>
   );

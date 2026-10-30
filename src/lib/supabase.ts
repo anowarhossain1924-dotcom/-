@@ -108,15 +108,18 @@ function mapNoticeToDb(item: Notice) {
 function mapClassRoutineFromDb(row: any): RoutineItem {
   return {
     id: row.id,
-    className: row.class_name,
+    className: row.class_name ?? row.className,
     subject: row.subject,
-    teacherName: row.teacher_name,
+    teacherName: row.teacher_name ?? row.teacherName,
     time: row.time,
     room: row.room,
     day: row.day,
     attachmentUrl: row.attachment_url ?? row.attachmentUrl ?? undefined,
     attachmentName: row.attachment_name ?? row.attachmentName ?? undefined,
-    attachmentType: row.attachment_type ?? row.attachmentType ?? undefined
+    attachmentType: row.attachment_type ?? row.attachmentType ?? undefined,
+    isFullRoutine: row.is_full_routine ?? row.isFullRoutine ?? false,
+    note: row.note ?? undefined,
+    uploadedAt: row.uploaded_at ?? row.uploadedAt ?? undefined
   };
 }
 
@@ -131,14 +134,17 @@ function mapClassRoutineToDb(item: RoutineItem) {
     day: item.day,
     attachment_url: item.attachmentUrl || null,
     attachment_name: item.attachmentName || null,
-    attachment_type: item.attachmentType || null
+    attachment_type: item.attachmentType || null,
+    is_full_routine: item.isFullRoutine || false,
+    note: item.note || null,
+    uploaded_at: item.uploadedAt || new Date().toISOString()
   };
 }
 
 function mapExamRoutineFromDb(row: any): ExamRoutineItem {
   return {
     id: row.id,
-    className: row.class_name,
+    className: row.class_name ?? row.className,
     subject: row.subject,
     date: row.date,
     day: row.day,
@@ -146,7 +152,11 @@ function mapExamRoutineFromDb(row: any): ExamRoutineItem {
     room: row.room,
     attachmentUrl: row.attachment_url ?? row.attachmentUrl ?? undefined,
     attachmentName: row.attachment_name ?? row.attachmentName ?? undefined,
-    attachmentType: row.attachment_type ?? row.attachmentType ?? undefined
+    attachmentType: row.attachment_type ?? row.attachmentType ?? undefined,
+    isFullRoutine: row.is_full_routine ?? row.isFullRoutine ?? false,
+    examTitle: row.exam_title ?? row.examTitle ?? undefined,
+    note: row.note ?? undefined,
+    uploadedAt: row.uploaded_at ?? row.uploadedAt ?? undefined
   };
 }
 
@@ -161,7 +171,11 @@ function mapExamRoutineToDb(item: ExamRoutineItem) {
     room: item.room,
     attachment_url: item.attachmentUrl || null,
     attachment_name: item.attachmentName || null,
-    attachment_type: item.attachmentType || null
+    attachment_type: item.attachmentType || null,
+    is_full_routine: item.isFullRoutine || false,
+    exam_title: item.examTitle || null,
+    note: item.note || null,
+    uploaded_at: item.uploadedAt || new Date().toISOString()
   };
 }
 

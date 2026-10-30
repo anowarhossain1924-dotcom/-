@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Logo from './Logo';
 import { Menu, X, Lock, Phone, Search, Bell, Calendar, Info, FileText, ChevronRight, Sparkles, BookOpen, Sun, Moon } from 'lucide-react';
 import { Notice, RoutineItem, ExamRoutineItem, SchoolInfo } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   currentView: string;
@@ -363,6 +364,9 @@ export default function Header({
 
             <span className="h-6 w-px bg-blue-800 mx-1.5"></span>
 
+            {/* PWA Install Button (Desktop & Android Chrome) */}
+            <PWAInstallButton variant="compact" />
+
             {/* Theme Toggle Button (Desktop) */}
             {toggleDarkMode && (
               <button
@@ -539,6 +543,11 @@ export default function Header({
               {item.label}
             </button>
           ))}
+
+          {/* PWA Install Promo in Mobile Drawer */}
+          <div className="pt-2">
+            <PWAInstallButton variant="drawer" />
+          </div>
 
           {toggleDarkMode && (
             <button

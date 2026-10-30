@@ -7,6 +7,30 @@
   --font-sans: "Inter", "Noto Serif Bengali", ui-sans-serif, system-ui, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  touch-action: manipulation;
+}
+
+/* Touch friendly mobile scrollbars */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+@keyframes bounceSubtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-bounce-subtle {
+  animation: bounceSubtle 2s ease-in-out infinite;
+}
+
 /* Custom styles for animations, printing, and glassmorphism cards */
 .glass-card {
   background: rgba(255, 255, 255, 0.85);

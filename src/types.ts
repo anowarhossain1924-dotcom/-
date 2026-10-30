@@ -20,6 +20,9 @@ export interface RoutineItem {
   attachmentUrl?: string; // Image, PDF, Doc, Sheet, or any format (Base64 or URL)
   attachmentName?: string; // Original filename (e.g. class5_routine.pdf)
   attachmentType?: string; // 'image' | 'pdf' | 'doc' | 'sheet' | 'other'
+  isFullRoutine?: boolean; // True if this is a complete uploaded routine document/image for the entire class
+  note?: string; // Description or note
+  uploadedAt?: string;
 }
 
 export interface ExamRoutineItem {
@@ -33,6 +36,10 @@ export interface ExamRoutineItem {
   attachmentUrl?: string; // Image, PDF, Doc, Sheet, or any format (Base64 or URL)
   attachmentName?: string; // Original filename (e.g. final_exam_routine.pdf)
   attachmentType?: string; // 'image' | 'pdf' | 'doc' | 'sheet' | 'other'
+  isFullRoutine?: boolean; // True if this is a complete uploaded exam routine document/image for the class
+  examTitle?: string; // Title of the exam (e.g. বার্ষিক পরীক্ষা ২০২৫)
+  note?: string;
+  uploadedAt?: string;
 }
 
 export interface AdmissionApplication {
