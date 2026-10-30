@@ -14,8 +14,8 @@ export default defineConfig(() => {
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: '/',
-          name: 'আদর্শ শিশু কানন স্কুল',
-          short_name: 'আদর্শ কানন',
+          name: 'আদর্শ শিশু কানন স্কুল ',
+          short_name: 'আদর্শ শিশু কানন স্কুল ',
           description: 'কাশিম বাজার, সুন্দরগঞ্জ, গাইবান্ধার আদর্শ শিশু কানন স্কুলের অফিসিয়াল প্ল্যাটফর্ম ও ওয়েব অ্যাপ',
           theme_color: '#1e3a8a',
           background_color: '#1e3a8a',

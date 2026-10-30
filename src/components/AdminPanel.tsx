@@ -1290,41 +1290,40 @@ export default function AdminPanel({
                     <div>
                       <label className="block text-xs font-bold text-gray-600 mb-1">সম্পূর্ণ রুটিন ফাইল বা ছবি নির্বাচন করুন *</label>
                       {fullClassRoutineForm.attachmentUrl ? (
-                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-300 text-xs shadow-sm">
-                          <div className="flex items-center space-x-2 truncate">
-                            {fullClassRoutineForm.attachmentType === 'image' ? (
-                              <Image size={18} className="text-emerald-600 shrink-0" />
-                            ) : (
-                              <FileText size={18} className="text-blue-600 shrink-0" />
-                            )}
-                            <div className="truncate">
-                              <p className="font-bold text-gray-800 truncate" title={fullClassRoutineForm.attachmentName}>
-                                {fullClassRoutineForm.attachmentName || 'রুটিন ফাইল'}
-                              </p>
-                              <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
-                                {fullClassRoutineForm.attachmentType || 'file'}
-                              </span>
+                        <div className="space-y-2 p-3 bg-white rounded-xl border border-emerald-300 text-xs shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2 truncate">
+                              {fullClassRoutineForm.attachmentType === 'image' ? (
+                                <Image size={18} className="text-emerald-600 shrink-0" />
+                              ) : (
+                                <FileText size={18} className="text-blue-600 shrink-0" />
+                              )}
+                              <div className="truncate">
+                                <p className="font-bold text-gray-800 truncate" title={fullClassRoutineForm.attachmentName}>
+                                  {fullClassRoutineForm.attachmentName || 'রুটিন ফাইল'}
+                                </p>
+                                <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                                  {fullClassRoutineForm.attachmentType || 'file'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setFullClassRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
+                                className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
+                                title="ফাইল পরিবর্তন / মুছে ফেলুন"
+                              >
+                                <X size={15} />
+                              </button>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2 shrink-0">
-                            <a
-                              href={fullClassRoutineForm.attachmentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 underline font-bold flex items-center gap-1 text-xs"
-                            >
-                              <Eye size={12} />
-                              <span>দেখুন</span>
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => setFullClassRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
-                              className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
-                              title="ফাইল মুছে ফেলুন"
-                            >
-                              <X size={15} />
-                            </button>
-                          </div>
+                          {/* Inline preview */}
+                          {fullClassRoutineForm.attachmentType === 'image' || fullClassRoutineForm.attachmentUrl.startsWith('data:image') ? (
+                            <img src={fullClassRoutineForm.attachmentUrl} alt="Preview" className="max-h-48 rounded-lg mx-auto object-contain border border-slate-100" />
+                          ) : (
+                            <iframe src={`${fullClassRoutineForm.attachmentUrl}#toolbar=0`} className="w-full h-48 rounded-lg border border-slate-200 bg-white" title="Class Routine Preview" />
+                          )}
                         </div>
                       ) : (
                         <label className="flex flex-col items-center justify-center p-5 bg-white border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl cursor-pointer transition text-center shadow-sm">
@@ -1685,41 +1684,40 @@ export default function AdminPanel({
                     <div>
                       <label className="block text-xs font-bold text-gray-600 mb-1">সম্পূর্ণ পরীক্ষার রুটিন ফাইল বা ছবি নির্বাচন করুন *</label>
                       {fullExamRoutineForm.attachmentUrl ? (
-                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-300 text-xs shadow-sm">
-                          <div className="flex items-center space-x-2 truncate">
-                            {fullExamRoutineForm.attachmentType === 'image' ? (
-                              <Image size={18} className="text-emerald-600 shrink-0" />
-                            ) : (
-                              <FileText size={18} className="text-blue-600 shrink-0" />
-                            )}
-                            <div className="truncate">
-                              <p className="font-bold text-gray-800 truncate" title={fullExamRoutineForm.attachmentName}>
-                                {fullExamRoutineForm.attachmentName || 'পরীক্ষার রুটিন ফাইল'}
-                              </p>
-                              <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
-                                {fullExamRoutineForm.attachmentType || 'file'}
-                              </span>
+                        <div className="space-y-2 p-3 bg-white rounded-xl border border-emerald-300 text-xs shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2 truncate">
+                              {fullExamRoutineForm.attachmentType === 'image' ? (
+                                <Image size={18} className="text-emerald-600 shrink-0" />
+                              ) : (
+                                <FileText size={18} className="text-blue-600 shrink-0" />
+                              )}
+                              <div className="truncate">
+                                <p className="font-bold text-gray-800 truncate" title={fullExamRoutineForm.attachmentName}>
+                                  {fullExamRoutineForm.attachmentName || 'পরীক্ষার রুটিন ফাইল'}
+                                </p>
+                                <span className="text-[10px] uppercase font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                                  {fullExamRoutineForm.attachmentType || 'file'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setFullExamRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
+                                className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
+                                title="ফাইল পরিবর্তন / মুছে ফেলুন"
+                              >
+                                <X size={15} />
+                              </button>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2 shrink-0">
-                            <a
-                              href={fullExamRoutineForm.attachmentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 underline font-bold flex items-center gap-1 text-xs"
-                            >
-                              <Eye size={12} />
-                              <span>দেখুন</span>
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => setFullExamRoutineForm(prev => ({ ...prev, attachmentUrl: '', attachmentName: '', attachmentType: '' }))}
-                              className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
-                              title="ফাইল মুছে ফেলুন"
-                            >
-                              <X size={15} />
-                            </button>
-                          </div>
+                          {/* Inline preview */}
+                          {fullExamRoutineForm.attachmentType === 'image' || fullExamRoutineForm.attachmentUrl.startsWith('data:image') ? (
+                            <img src={fullExamRoutineForm.attachmentUrl} alt="Preview" className="max-h-48 rounded-lg mx-auto object-contain border border-slate-100" />
+                          ) : (
+                            <iframe src={`${fullExamRoutineForm.attachmentUrl}#toolbar=0`} className="w-full h-48 rounded-lg border border-slate-200 bg-white" title="Exam Routine Preview" />
+                          )}
                         </div>
                       ) : (
                         <label className="flex flex-col items-center justify-center p-5 bg-white border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-xl cursor-pointer transition text-center shadow-sm">

@@ -83,7 +83,7 @@ export const DEFAULT_SCHOOL_INFO: SchoolInfo = {
   contactEmail: 'contact@adarshashishukanan.edu.bd',
   whatsappNumber: '8801924535589', // Bengali default for contact, fully configurable
   address: 'কাশিম বাজার, সুন্দরগঞ্জ, গাইবান্ধা, বাংলাদেশ',
-  logoUrl: ''
+  logoUrl: '/icon.svg'
 };
 
 export const DEFAULT_APPLICATIONS: AdmissionApplication[] = [

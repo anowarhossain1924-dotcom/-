@@ -1,56 +1,105 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="mBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1e3a8a" />
-      <stop offset="50%" stop-color="#172554" />
-      <stop offset="100%" stop-color="#0f172a" />
-    </linearGradient>
-    <linearGradient id="mGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fef08a" />
-      <stop offset="50%" stop-color="#f59e0b" />
-      <stop offset="100%" stop-color="#d97706" />
-    </linearGradient>
-  </defs>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Solid Background for Maskable Icon Safe Zone -->
+  <rect width="512" height="512" fill="#1e3a8a" />
+  
+  <g transform="translate(51, 51) scale(0.8)">
+    <defs>
+      <!-- Circular Paths for Top & Bottom Bengali Text -->
+      <path id="maskableTopTextPath" d="M 64,256 A 192,192 0 1,1 448,256" fill="none" />
+      <path id="maskableBottomTextPath" d="M 68,256 A 188,188 0 0,0 444,256" fill="none" />
+      <path id="maskableRibbonTextPath" d="M 128,468 Q 256,448 384,468" fill="none" />
 
-  <!-- Full Bleed Background for Android adaptive icon cropping -->
-  <rect width="512" height="512" fill="url(#mBgGrad)" />
+      <linearGradient id="maskableBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff" />
+        <stop offset="100%" stop-color="#fffbeb" />
+      </linearGradient>
 
-  <!-- Inner Content scaled into 80% safe zone with transform -->
-  <g transform="translate(51.2, 51.2) scale(0.8)">
-    <!-- Gold Ring -->
-    <circle cx="256" cy="256" r="230" fill="none" stroke="#f59e0b" stroke-width="10" />
+      <linearGradient id="maskableGoldRing" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fef08a" />
+        <stop offset="50%" stop-color="#f59e0b" />
+        <stop offset="100%" stop-color="#d97706" />
+      </linearGradient>
+    </defs>
 
-    <!-- Sun Arc -->
-    <path d="M 176 210 A 80 80 0 0 1 336 210 Z" fill="url(#mGoldGrad)" />
+    <!-- Outer Navy Frame & Gold Ring -->
+    <circle cx="256" cy="256" r="250" fill="#1e3a8a" />
+    <circle cx="256" cy="256" r="244" fill="url(#maskableGoldRing)" />
+    <circle cx="256" cy="256" r="236" fill="#1e3a8a" />
+    
+    <!-- Outer Cream Circle where School Name Sits -->
+    <circle cx="256" cy="256" r="230" fill="url(#maskableBgGrad)" stroke="#1e3a8a" stroke-width="4" />
+    
+    <!-- Inner White Circle for Center Symbols -->
+    <circle cx="256" cy="256" r="158" fill="#ffffff" stroke="#1e3a8a" stroke-width="3.5" />
 
-    <!-- Cap -->
-    <polygon points="256,120 370,165 256,205 142,165" fill="#f59e0b" stroke="#ffffff" stroke-width="3" />
-    <path d="M 180 183 L 180 220 C 180 245 332 245 332 220 L 332 183" fill="#d97706" />
-    <path d="M 360 170 Q 375 200 372 235" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" />
-    <circle cx="372" cy="240" r="6" fill="#fef08a" />
+    <!-- School Name (Top Curve) -->
+    <text fill="#dc2626" font-size="30" font-weight="900" font-family="'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" letter-spacing="0.5">
+      <textPath href="#maskableTopTextPath" startOffset="50%" text-anchor="middle">আদর্শ শিশু কানন স্কুল</textPath>
+    </text>
 
-    <!-- Book -->
-    <path d="M 130 330 C 180 300 240 315 256 335 C 272 315 332 300 382 330 L 382 355 C 332 325 272 340 256 360 C 240 340 180 325 130 355 Z" fill="#b45309" />
-    <path d="M 130 320 C 180 290 240 305 256 325 L 256 350 C 240 330 180 315 130 345 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
-    <path d="M 382 320 C 332 290 272 305 256 325 L 256 350 C 272 330 332 315 382 345 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2" />
+    <!-- Location (Bottom Curve) -->
+    <text fill="#0f172a" font-size="22" font-weight="bold" font-family="'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" letter-spacing="0.3">
+      <textPath href="#maskableBottomTextPath" startOffset="50%" text-anchor="middle">কাশিম বাজার, সুন্দরগঞ্জ, গাইবান্ধা</textPath>
+    </text>
 
-    <!-- Laurel -->
-    <g fill="#10b981">
-      <ellipse cx="110" cy="240" rx="14" ry="7" transform="rotate(-35, 110, 240)" />
-      <ellipse cx="100" cy="275" rx="14" ry="7" transform="rotate(-15, 100, 275)" />
-      <ellipse cx="100" cy="310" rx="14" ry="7" transform="rotate(10, 100, 310)" />
-      <ellipse cx="112" cy="345" rx="14" ry="7" transform="rotate(30, 112, 345)" />
-
-      <ellipse cx="402" cy="240" rx="14" ry="7" transform="rotate(35, 402, 240)" />
-      <ellipse cx="412" cy="275" rx="14" ry="7" transform="rotate(15, 412, 275)" />
-      <ellipse cx="412" cy="310" rx="14" ry="7" transform="rotate(-10, 412, 310)" />
-      <ellipse cx="400" cy="345" rx="14" ry="7" transform="rotate(-30, 400, 345)" />
+    <!-- Decorative Red Stars on Sides -->
+    <g transform="translate(68, 256)">
+      <polygon points="0,-12 3.5,-3.5 12,-3.5 5.5,1.5 8,10 0,5 -8,10 -5.5,1.5 -12,-3.5 -3.5,-3.5" fill="#dc2626" stroke="#1e3a8a" stroke-width="1.2" />
+    </g>
+    <g transform="translate(444, 256)">
+      <polygon points="0,-12 3.5,-3.5 12,-3.5 5.5,1.5 8,10 0,5 -8,10 -5.5,1.5 -12,-3.5 -3.5,-3.5" fill="#dc2626" stroke="#1e3a8a" stroke-width="1.2" />
     </g>
 
-    <!-- ESTD -->
-    <rect x="120" y="395" width="272" height="40" rx="8" fill="url(#mGoldGrad)" />
-    <text x="256" y="423" font-family="system-ui, sans-serif" font-size="20" font-weight="900" text-anchor="middle" fill="#1e3a8a">
-      ESTD - 2011
+    <!-- Sun Rays of Knowledge in the Center -->
+    <g stroke="#f59e0b" stroke-width="3" stroke-linecap="round">
+      <line x1="256" y1="130" x2="256" y2="114" />
+      <line x1="236" y1="137" x2="224" y2="124" />
+      <line x1="220" y1="152" x2="206" y2="142" />
+      <line x1="213" y1="172" x2="198" y2="167" />
+      <line x1="276" y1="137" x2="288" y2="124" />
+      <line x1="292" y1="152" x2="306" y2="142" />
+      <line x1="299" y1="172" x2="314" y2="167" />
+    </g>
+
+    <!-- Pencil / Torch of Education -->
+    <rect x="249" y="185" width="14" height="48" rx="2.5" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5" />
+    <line x1="256" y1="185" x2="256" y2="175" stroke="#0f172a" stroke-width="2.5" />
+    <!-- Flame of Light -->
+    <path d="M 256,176 C 247,166 248,148 256,134 C 264,148 265,166 256,176 Z" fill="#ea580c" />
+    <path d="M 256,173 C 251,166 251,154 256,145 C 261,154 261,166 256,173 Z" fill="#facc15" />
+
+    <!-- Letters A & B above Book Pages -->
+    <text x="200" y="196" fill="#16a34a" font-size="30" font-weight="900" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">A</text>
+    <text x="312" y="196" fill="#16a34a" font-size="30" font-weight="900" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">B</text>
+
+    <!-- Open Book (Center) -->
+    <path d="M 256,315 Q 198,272 142,284 L 142,222 Q 198,210 256,252 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="4" stroke-linejoin="round" />
+    <path d="M 256,315 Q 314,272 370,284 L 370,222 Q 314,210 256,252 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="4" stroke-linejoin="round" />
+    <line x1="256" y1="252" x2="256" y2="315" stroke="#1d4ed8" stroke-width="3" />
+
+    <!-- Book Content: Bengali & Math Numerals (অ, আ, ১, ২) -->
+    <text x="198" y="248" fill="#0f172a" font-size="28" font-weight="900" font-family="'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" text-anchor="middle">অ</text>
+    <text x="198" y="288" fill="#7c3aed" font-size="28" font-weight="900" font-family="'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" text-anchor="middle">আ</text>
+    <text x="314" y="248" fill="#dc2626" font-size="28" font-weight="900" font-family="'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" text-anchor="middle">১</text>
+    <text x="314" y="288" fill="#2563eb" font-size="28" font-weight="900" font-family="'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" text-anchor="middle">২</text>
+
+    <!-- Established Year -->
+    <text x="256" y="355" fill="#0f172a" font-size="22" font-weight="bold" font-family="'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" text-anchor="middle">
+      স্থাপিত: ২০১১ইং
     </text>
+
+    <!-- Green Ribbon at Bottom: জ্ঞানই শক্তি -->
+    <g>
+      <path d="M 120,432 L 70,458 L 120,484 Z" fill="#15803d" stroke="#14532d" stroke-width="2" />
+      <path d="M 120,432 L 138,435 L 138,480 L 120,484 Z" fill="#14532d" />
+      
+      <path d="M 392,432 L 442,458 L 392,484 Z" fill="#15803d" stroke="#14532d" stroke-width="2" />
+      <path d="M 392,432 L 374,435 L 374,480 L 392,484 Z" fill="#14532d" />
+
+      <path d="M 108,436 Q 256,416 404,436 L 392,490 Q 256,470 120,490 Z" fill="#16a34a" stroke="#15803d" stroke-width="2.5" stroke-linejoin="round" />
+      <text fill="#ffffff" font-size="24" font-weight="900" font-family="'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif" letter-spacing="1">
+        <textPath href="#maskableRibbonTextPath" startOffset="50%" text-anchor="middle">জ্ঞানই শক্তি</textPath>
+      </text>
+    </g>
   </g>
 </svg>

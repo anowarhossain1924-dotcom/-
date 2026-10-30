@@ -23,11 +23,9 @@ export default function Footer({ info }: FooterProps) {
           {/* Col 1: School Identity */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              {info.logoUrl && info.logoUrl.trim() !== '' && (
-                <div className="bg-white p-1 rounded-full shadow-inner ring-2 ring-amber-400">
-                  <Logo size={55} logoUrl={info.logoUrl} />
-                </div>
-              )}
+              <div className="bg-white p-1 rounded-full shadow-inner ring-2 ring-amber-400 shrink-0">
+                <Logo size={52} logoUrl={info.logoUrl || '/icon.svg'} />
+              </div>
               <div>
                 <h4 className="text-lg font-bold text-white font-sans">আদর্শ শিশু কানন স্কুল</h4>
                 <p className="text-xs text-slate-400 tracking-wide">স্থাপিত: ২০১১ ইং</p>

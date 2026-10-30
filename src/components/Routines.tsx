@@ -15,6 +15,9 @@ import {
   FileCheck,
   Sparkles,
   ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Maximize2,
   Layers,
   FileSpreadsheet
 } from 'lucide-react';
@@ -36,6 +39,7 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
   const [activeTab, setActiveTab] = useState<'class' | 'exam'>('class');
   const [selectedClass, setSelectedClass] = useState<string>('Play');
   const [previewAttachment, setPreviewAttachment] = useState<PreviewAttachment | null>(null);
+  const [modalZoom, setModalZoom] = useState<number>(1);
 
   // Sub-view toggle preference ('auto' | 'full' | 'table')
   const [classViewPref, setClassViewPref] = useState<'full' | 'table'>('full');
@@ -81,32 +85,55 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
   };
 
   const openAttachment = (url: string, title: string, name?: string, type?: string) => {
-    if (type === 'image' || url.startsWith('data:image')) {
-      setPreviewAttachment({ url, title, name, type: 'image' });
-    } else {
-      window.open(url, '_blank');
+    let detectedType = type;
+    if (!detectedType) {
+      if (url.startsWith('data:image') || /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(name || '')) {
+        detectedType = 'image';
+      } else if (url.startsWith('data:application/pdf') || /\.pdf$/i.test(name || '') || url.includes('.pdf')) {
+        detectedType = 'pdf';
+      } else if (/\.(doc|docx|xls|xlsx|ppt|pptx)$/i.test(name || '')) {
+        detectedType = 'doc';
+      } else {
+        detectedType = 'other';
+      }
     }
+    setModalZoom(1);
+    setPreviewAttachment({ url, title, name, type: detectedType });
   };
 
-  // Component to render a full uploaded routine card (Image or Document)
+  // Component to render a full uploaded routine card (Image, PDF or Any Document directly viewable without download)
   const renderFullRoutineCard = (item: RoutineItem | ExamRoutineItem, isExam = false) => {
-    const isImage = item.attachmentType === 'image' || item.attachmentUrl?.startsWith('data:image') || /\.(jpg|jpeg|png|webp|gif)$/i.test(item.attachmentName || '');
-    const isPdf = item.attachmentType === 'pdf' || /\.pdf$/i.test(item.attachmentName || '');
+    const isImage = item.attachmentType === 'image' || item.attachmentUrl?.startsWith('data:image') || /\.(jpg|jpeg|png|webp|gif|svg|bmp)$/i.test(item.attachmentName || '');
+    const isPdf = item.attachmentType === 'pdf' || /\.pdf$/i.test(item.attachmentName || '') || item.attachmentUrl?.startsWith('data:application/pdf') || (item.attachmentUrl && item.attachmentUrl.includes('.pdf'));
+    const isDoc = item.attachmentType === 'doc' || item.attachmentType === 'sheet' || /\.(doc|docx|xls|xlsx|ppt|pptx)$/i.test(item.attachmentName || '');
+    const isWebUrl = item.attachmentUrl?.startsWith('http://') || item.attachmentUrl?.startsWith('https://');
 
     return (
-      <div key={item.id} className="bg-slate-50 border border-blue-200 rounded-2xl overflow-hidden shadow-sm space-y-4 p-5 sm:p-6 transition-all hover:shadow-md">
+      <div key={item.id} className="bg-slate-50 border border-blue-200 rounded-2xl overflow-hidden shadow-sm space-y-4 p-4 sm:p-6 transition-all hover:shadow-md">
         
         {/* Header of Full Routine Card */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-blue-100 gap-2">
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-900 rounded-full font-bold text-xs">
                 <Sparkles size={12} className="text-purple-600" />
-                <span>অফিসিয়াল পূর্ণাঙ্গ {isExam ? 'পরীক্ষার' : 'ক্লাস'} রুটিন কপি</span>
+                <span>অফিসিয়াল পূর্ণাঙ্গ {isExam ? 'পরীক্ষার' : 'ক্লাস'} রুটিন</span>
               </span>
               <span className="text-xs bg-blue-100 text-blue-900 font-bold px-2.5 py-0.5 rounded-md">
                 {item.className}
               </span>
+              {isPdf && (
+                <span className="text-[11px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                  <FileText size={12} />
+                  <span>PDF রুটিন (সরাসরি প্রদর্শন)</span>
+                </span>
+              )}
+              {isImage && (
+                <span className="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                  <ImageIcon size={12} />
+                  <span>ছবি রুটিন (সরাসরি প্রদর্শন)</span>
+                </span>
+              )}
             </div>
             <h4 className="text-base sm:text-lg font-bold text-blue-950 mt-1">
               {item.subject}
@@ -118,21 +145,37 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
 
           <div className="flex items-center gap-2 shrink-0 no-print">
             {item.attachmentUrl && (
-              <a
-                href={item.attachmentUrl}
-                download={item.attachmentName || 'routine-official-file'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3.5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm cursor-pointer"
-              >
-                <Download size={14} />
-                <span>ডাউনলোড</span>
-              </a>
+              <>
+                <button
+                  type="button"
+                  onClick={() => openAttachment(
+                    item.attachmentUrl!, 
+                    `${item.className} - ${item.subject}`, 
+                    item.attachmentName, 
+                    isPdf ? 'pdf' : isImage ? 'image' : isDoc ? 'doc' : 'other'
+                  )}
+                  className="px-3.5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-sm cursor-pointer"
+                >
+                  <Maximize2 size={13} />
+                  <span>পূর্ণ স্ক্রিনে দেখুন</span>
+                </button>
+                <a
+                  href={item.attachmentUrl}
+                  download={item.attachmentName || 'routine-official-file'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-gray-800 rounded-xl text-xs font-bold flex items-center space-x-1 transition shadow-xs cursor-pointer"
+                  title="প্রয়োজনে ডাউনলোড করুন (ঐচ্ছিক)"
+                >
+                  <Download size={13} />
+                  <span className="hidden sm:inline">ডাউনলোড</span>
+                </a>
+              </>
             )}
           </div>
         </div>
 
-        {/* Display image directly or file card */}
+        {/* Display routine directly on page without downloading */}
         {item.attachmentUrl ? (
           <div>
             {isImage ? (
@@ -144,12 +187,12 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
                   <img
                     src={item.attachmentUrl}
                     alt={item.subject}
-                    className="max-h-[600px] w-auto mx-auto object-contain rounded-lg transition-transform duration-200 group-hover:scale-[1.01]"
+                    className="max-h-[650px] w-auto mx-auto object-contain rounded-lg transition-transform duration-200 group-hover:scale-[1.01]"
                   />
                   <div className="absolute inset-0 bg-blue-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                     <span className="px-4 py-2 bg-blue-900/90 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-lg">
                       <ZoomIn size={16} />
-                      <span>বড় করে দেখতে ক্লিক করুন (Zoom)</span>
+                      <span>বড় করে পড়তে ক্লিক করুন (Zoom)</span>
                     </span>
                   </div>
                 </div>
@@ -161,47 +204,89 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
                     className="text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 cursor-pointer"
                   >
                     <ZoomIn size={13} />
-                    <span>পূর্ণ পর্দায় দেখুন</span>
+                    <span>পূর্ণ পর্দায় বড় করে দেখুন</span>
                   </button>
                 </div>
               </div>
+            ) : isPdf ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-blue-950 bg-blue-100/70 px-3.5 py-2.5 rounded-xl border border-blue-200">
+                  <span className="font-bold flex items-center gap-2">
+                    <FileText size={16} className="text-rose-600" />
+                    <span>পিডিএফ রুটিন সরাসরি পড়া যাচ্ছে (ডাউনলোড ছাড়াই স্ক্রোল করে পড়ুন)</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => openAttachment(item.attachmentUrl!, `${item.className} - ${item.subject}`, item.attachmentName, 'pdf')}
+                    className="font-bold text-blue-900 hover:text-blue-950 flex items-center gap-1 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs hover:shadow-xs transition"
+                  >
+                    <Maximize2 size={13} />
+                    <span>বড় পর্দায় খুলুন</span>
+                  </button>
+                </div>
+
+                {/* Embedded PDF Viewer - Directly visible in page with zero download */}
+                <div className="rounded-xl overflow-hidden border border-slate-300 bg-white shadow-inner">
+                  <iframe
+                    src={`${item.attachmentUrl}#toolbar=1&navpanes=0`}
+                    className="w-full h-[600px] sm:h-[750px] border-0 bg-white"
+                    title={item.subject}
+                  />
+                </div>
+
+                <div className="flex justify-between items-center text-xs text-gray-500 no-print px-1">
+                  <span>ফাইলের নাম: {item.attachmentName || 'রুটিন পিডিএফ'}</span>
+                  <button
+                    type="button"
+                    onClick={() => openAttachment(item.attachmentUrl!, `${item.className} - ${item.subject}`, item.attachmentName, 'pdf')}
+                    className="text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Eye size={13} />
+                    <span>পূর্ণ পর্দায় পড়ুন</span>
+                  </button>
+                </div>
+              </div>
+            ) : isDoc && isWebUrl ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-blue-950 bg-emerald-50 px-3.5 py-2.5 rounded-xl border border-emerald-200">
+                  <span className="font-bold flex items-center gap-2 text-emerald-900">
+                    <FileSpreadsheet size={16} className="text-emerald-700" />
+                    <span>অফিসিয়াল ডকুমেন্ট সরাসরি পড়া যাচ্ছে</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => openAttachment(item.attachmentUrl!, `${item.className} - ${item.subject}`, item.attachmentName, 'doc')}
+                    className="font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-1 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-emerald-300 shadow-2xs transition"
+                  >
+                    <Maximize2 size={13} />
+                    <span>বড় করে দেখুন</span>
+                  </button>
+                </div>
+
+                {/* Embedded Google Docs Viewer for docx/xlsx web URLs */}
+                <div className="rounded-xl overflow-hidden border border-slate-300 bg-white shadow-inner">
+                  <iframe
+                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(item.attachmentUrl)}&embedded=true`}
+                    className="w-full h-[600px] sm:h-[750px] border-0 bg-white"
+                    title={item.subject}
+                  />
+                </div>
+              </div>
             ) : (
-              <div className="p-6 bg-white rounded-xl border border-blue-200 text-center space-y-3 max-w-lg mx-auto shadow-sm">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-900 mx-auto flex items-center justify-center">
-                  {isPdf ? <FileText size={32} className="text-rose-600" /> : <FileSpreadsheet size={32} className="text-emerald-600" />}
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-sm">{item.attachmentName || 'অফিসিয়াল রুটিন ডকুমেন্ট'}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {item.attachmentType?.toUpperCase() || 'DOCUMENT'} ফরম্যাটের পূর্ণাঙ্গ রুটিন ফাইল
-                  </p>
-                </div>
-                <div className="flex justify-center gap-3 pt-2 no-print">
-                  <a
-                    href={item.attachmentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition shadow-sm"
-                  >
-                    <Eye size={14} />
-                    <span>সরাসরি দেখুন</span>
-                  </a>
-                  <a
-                    href={item.attachmentUrl}
-                    download={item.attachmentName || 'routine-file'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition shadow-sm"
-                  >
-                    <Download size={14} />
-                    <span>ডাউনলোড করুন</span>
-                  </a>
+              /* Generic file viewer fallback with embedded iframe */
+              <div className="space-y-3">
+                <div className="rounded-xl overflow-hidden border border-slate-300 bg-white shadow-inner">
+                  <iframe
+                    src={item.attachmentUrl}
+                    className="w-full h-[550px] sm:h-[700px] border-0 bg-white"
+                    title={item.subject}
+                  />
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <p className="text-xs text-gray-500">কোন ফাইল পাওয়া যায়নি।</p>
+          <p className="text-xs text-gray-500">কোন ফাইল সংযুক্ত করা হয়নি।</p>
         )}
 
       </div>
@@ -583,21 +668,21 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
 
       </div>
 
-      {/* Lightbox Modal for Image / Attachment Preview */}
+      {/* Lightbox Modal for Image / PDF / Attachment Direct Preview */}
       {previewAttachment && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200 no-print"
           onClick={() => setPreviewAttachment(null)}
         >
           <div 
-            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+            className="bg-white rounded-2xl max-w-5xl w-full max-h-[95vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 bg-slate-50 shrink-0">
               <div className="flex items-center space-x-2 truncate">
                 <Paperclip size={18} className="text-blue-900 shrink-0" />
-                <h4 className="font-bold text-blue-950 text-sm truncate">
+                <h4 className="font-bold text-blue-950 text-sm sm:text-base truncate">
                   {previewAttachment.title}
                 </h4>
                 {previewAttachment.name && (
@@ -606,51 +691,97 @@ export default function Routines({ classRoutines, examRoutines, classes }: Routi
                   </span>
                 )}
               </div>
-              <div className="flex items-center space-x-2 shrink-0">
+              <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+                {/* Zoom Controls for Images */}
+                {(previewAttachment.type === 'image' || previewAttachment.url.startsWith('data:image')) && (
+                  <div className="flex items-center bg-slate-200 rounded-lg p-0.5 space-x-1 mr-2">
+                    <button
+                      type="button"
+                      onClick={() => setModalZoom(prev => Math.max(0.5, prev - 0.25))}
+                      className="p-1 text-gray-700 hover:text-black rounded hover:bg-white transition cursor-pointer"
+                      title="ছোট করুন (Zoom Out)"
+                    >
+                      <ZoomOut size={15} />
+                    </button>
+                    <span className="text-[11px] font-bold font-mono px-1 text-gray-700">
+                      {Math.round(modalZoom * 100)}%
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setModalZoom(prev => Math.min(3, prev + 0.25))}
+                      className="p-1 text-gray-700 hover:text-black rounded hover:bg-white transition cursor-pointer"
+                      title="বড় করুন (Zoom In)"
+                    >
+                      <ZoomIn size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setModalZoom(1)}
+                      className="p-1 text-gray-700 hover:text-black rounded hover:bg-white transition cursor-pointer"
+                      title="রিসেট (Reset)"
+                    >
+                      <RotateCcw size={13} />
+                    </button>
+                  </div>
+                )}
+
                 <a
                   href={previewAttachment.url}
                   download={previewAttachment.name || 'routine-file'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 transition"
+                  className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-gray-800 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer"
+                  title="প্রয়োজনে ডাউনলোড করুন (ঐচ্ছিক)"
                 >
                   <Download size={14} />
-                  <span>ডাউনলোড</span>
+                  <span className="hidden sm:inline">ডাউনলোড</span>
                 </a>
+
                 <button
                   type="button"
                   onClick={() => setPreviewAttachment(null)}
-                  className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-slate-200/60 transition cursor-pointer"
-                  title="বন্ধ করুন"
+                  className="p-1.5 text-gray-500 hover:text-gray-800 rounded-lg hover:bg-slate-200 transition cursor-pointer ml-1"
+                  title="বন্ধ করুন (Close)"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-4 overflow-auto flex items-center justify-center bg-slate-100 min-h-[300px]">
+            {/* Modal Body - Direct in-browser viewing for all formats */}
+            <div className="p-2 sm:p-4 overflow-auto flex-1 flex items-center justify-center bg-slate-100 min-h-[400px]">
               {previewAttachment.type === 'image' || previewAttachment.url.startsWith('data:image') ? (
-                <img 
-                  src={previewAttachment.url} 
-                  alt={previewAttachment.title}
-                  className="max-h-[75vh] w-auto object-contain rounded-lg shadow-md"
-                />
+                <div className="overflow-auto max-h-[82vh] w-full flex items-center justify-center p-2">
+                  <img 
+                    src={previewAttachment.url} 
+                    alt={previewAttachment.title}
+                    style={{ transform: `scale(${modalZoom})`, transformOrigin: 'center center' }}
+                    className="max-h-[80vh] w-auto object-contain rounded-lg shadow-lg transition-transform duration-150"
+                  />
+                </div>
+              ) : previewAttachment.type === 'pdf' || previewAttachment.url.startsWith('data:application/pdf') || /\.pdf$/i.test(previewAttachment.name || '') ? (
+                <div className="w-full h-[82vh] bg-white rounded-xl overflow-hidden shadow-inner border border-slate-300">
+                  <iframe
+                    src={`${previewAttachment.url}#toolbar=1&navpanes=0`}
+                    className="w-full h-full border-0 bg-white"
+                    title={previewAttachment.title}
+                  />
+                </div>
+              ) : previewAttachment.url.startsWith('http') && /\.(doc|docx|xls|xlsx|ppt|pptx)$/i.test(previewAttachment.name || '') ? (
+                <div className="w-full h-[82vh] bg-white rounded-xl overflow-hidden shadow-inner border border-slate-300">
+                  <iframe
+                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewAttachment.url)}&embedded=true`}
+                    className="w-full h-full border-0 bg-white"
+                    title={previewAttachment.title}
+                  />
+                </div>
               ) : (
-                <div className="text-center p-8 bg-white rounded-xl shadow-sm max-w-md w-full">
-                  <FileText size={48} className="mx-auto text-blue-900 mb-3" />
-                  <p className="font-bold text-gray-800 mb-1">{previewAttachment.name || 'সংযুক্ত ডকুমেন্ট'}</p>
-                  <p className="text-xs text-gray-500 mb-4">এই ফাইলটি প্রিভিউ করার জন্য নিচের বাটনে ক্লিক করে ওপেন বা ডাউনলোড করুন।</p>
-                  <a
-                    href={previewAttachment.url}
-                    download={previewAttachment.name || 'routine-document'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-sm font-bold transition shadow-sm"
-                  >
-                    <Download size={16} />
-                    <span>ফাইল ওপেন / ডাউনলোড</span>
-                  </a>
+                <div className="w-full h-[82vh] bg-white rounded-xl overflow-hidden shadow-inner border border-slate-300">
+                  <iframe
+                    src={previewAttachment.url}
+                    className="w-full h-full border-0 bg-white"
+                    title={previewAttachment.title}
+                  />
                 </div>
               )}
             </div>
