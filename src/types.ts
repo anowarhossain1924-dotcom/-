@@ -17,6 +17,9 @@ export interface RoutineItem {
   time: string;
   room: string;
   day: string; // e.g. Saturday, Sunday, etc.
+  attachmentUrl?: string; // Image, PDF, Doc, Sheet, or any format (Base64 or URL)
+  attachmentName?: string; // Original filename (e.g. class5_routine.pdf)
+  attachmentType?: string; // 'image' | 'pdf' | 'doc' | 'sheet' | 'other'
 }
 
 export interface ExamRoutineItem {
@@ -27,6 +30,9 @@ export interface ExamRoutineItem {
   day: string;
   time: string;
   room: string;
+  attachmentUrl?: string; // Image, PDF, Doc, Sheet, or any format (Base64 or URL)
+  attachmentName?: string; // Original filename (e.g. final_exam_routine.pdf)
+  attachmentType?: string; // 'image' | 'pdf' | 'doc' | 'sheet' | 'other'
 }
 
 export interface AdmissionApplication {

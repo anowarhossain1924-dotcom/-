@@ -52,6 +52,30 @@ export async function uploadImageToSupabaseStorage(file: File, folder = 'uploads
   }
 }
 
+export async function uploadFileToSupabaseStorage(
+  file: File, 
+  folder = 'routines'
+): Promise<{ url: string; fileName: string; fileType: string }> {
+  const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+  let fileType = 'other';
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(fileExt)) {
+    fileType = 'image';
+  } else if (fileExt === 'pdf') {
+    fileType = 'pdf';
+  } else if (['doc', 'docx', 'odt', 'rtf', 'txt'].includes(fileExt)) {
+    fileType = 'doc';
+  } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
+    fileType = 'sheet';
+  }
+
+  const url = await uploadImageToSupabaseStorage(file, folder);
+  return {
+    url,
+    fileName: file.name,
+    fileType
+  };
+}
+
 // ============================================================
 // DATA MAPPERS (Snake Case DB <-> Camel Case TS)
 // ============================================================
@@ -89,7 +113,10 @@ function mapClassRoutineFromDb(row: any): RoutineItem {
     teacherName: row.teacher_name,
     time: row.time,
     room: row.room,
-    day: row.day
+    day: row.day,
+    attachmentUrl: row.attachment_url ?? row.attachmentUrl ?? undefined,
+    attachmentName: row.attachment_name ?? row.attachmentName ?? undefined,
+    attachmentType: row.attachment_type ?? row.attachmentType ?? undefined
   };
 }
 
@@ -101,7 +128,10 @@ function mapClassRoutineToDb(item: RoutineItem) {
     teacher_name: item.teacherName,
     time: item.time,
     room: item.room,
-    day: item.day
+    day: item.day,
+    attachment_url: item.attachmentUrl || null,
+    attachment_name: item.attachmentName || null,
+    attachment_type: item.attachmentType || null
   };
 }
 
@@ -113,7 +143,10 @@ function mapExamRoutineFromDb(row: any): ExamRoutineItem {
     date: row.date,
     day: row.day,
     time: row.time,
-    room: row.room
+    room: row.room,
+    attachmentUrl: row.attachment_url ?? row.attachmentUrl ?? undefined,
+    attachmentName: row.attachment_name ?? row.attachmentName ?? undefined,
+    attachmentType: row.attachment_type ?? row.attachmentType ?? undefined
   };
 }
 
@@ -125,7 +158,10 @@ function mapExamRoutineToDb(item: ExamRoutineItem) {
     date: item.date,
     day: item.day,
     time: item.time,
-    room: item.room
+    room: item.room,
+    attachment_url: item.attachmentUrl || null,
+    attachment_name: item.attachmentName || null,
+    attachment_type: item.attachmentType || null
   };
 }
 
@@ -552,8 +588,27 @@ export async function saveClassRoutineToSupabase(item: RoutineItem) {
   const updated = idx >= 0 ? current.map(r => r.id === item.id ? item : r) : [...current, item];
   setLocalCache(STORAGE_KEYS.CLASS_ROUTINES, updated);
 
-  const { error } = await supabase.from('class_routines').upsert(mapClassRoutineToDb(item));
-  if (error) console.error('Supabase class routine save error:', error.message);
+  try {
+    const { error } = await supabase.from('class_routines').upsert(mapClassRoutineToDb(item));
+    if (error) {
+      console.warn('Supabase class routine save warning:', error.message);
+      if (error.message?.toLowerCase().includes('column') || error.message?.toLowerCase().includes('attachment')) {
+        // Fallback without attachment columns if not added in remote schema
+        const fallback = {
+          id: item.id,
+          class_name: item.className,
+          subject: item.subject,
+          teacher_name: item.teacherName,
+          time: item.time,
+          room: item.room,
+          day: item.day
+        };
+        await supabase.from('class_routines').upsert(fallback);
+      }
+    }
+  } catch (err) {
+    console.error('Supabase class routine save exception:', err);
+  }
 }
 
 export async function deleteClassRoutineFromSupabase(id: string) {
@@ -571,8 +626,27 @@ export async function saveExamRoutineToSupabase(item: ExamRoutineItem) {
   const updated = idx >= 0 ? current.map(r => r.id === item.id ? item : r) : [...current, item];
   setLocalCache(STORAGE_KEYS.EXAM_ROUTINES, updated);
 
-  const { error } = await supabase.from('exam_routines').upsert(mapExamRoutineToDb(item));
-  if (error) console.error('Supabase exam routine save error:', error.message);
+  try {
+    const { error } = await supabase.from('exam_routines').upsert(mapExamRoutineToDb(item));
+    if (error) {
+      console.warn('Supabase exam routine save warning:', error.message);
+      if (error.message?.toLowerCase().includes('column') || error.message?.toLowerCase().includes('attachment')) {
+        // Fallback without attachment columns if not added in remote schema
+        const fallback = {
+          id: item.id,
+          class_name: item.className,
+          subject: item.subject,
+          date: item.date,
+          day: item.day,
+          time: item.time,
+          room: item.room
+        };
+        await supabase.from('exam_routines').upsert(fallback);
+      }
+    }
+  } catch (err) {
+    console.error('Supabase exam routine save exception:', err);
+  }
 }
 
 export async function deleteExamRoutineFromSupabase(id: string) {
