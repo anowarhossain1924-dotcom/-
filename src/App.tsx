@@ -9,6 +9,9 @@ import AdminPanel from './components/AdminPanel';
 import Footer from './components/Footer';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PWAInstallButton } from './components/PWAInstallButton';
+import { useDynamicAppIcon } from './hooks/useDynamicAppIcon';
+import StudyChatbot from './components/StudyChatbot';
+import StudyFloatingWidget from './components/StudyFloatingWidget';
 
 import { 
   Notice, 
@@ -46,7 +49,9 @@ import {
   PhoneCall, 
   FileText, 
   MapPin, 
-  MessageSquare 
+  MessageSquare,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 
 const CLASSES = ['Play', 'Nursery', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'];
@@ -81,6 +86,9 @@ export default function App() {
   const [applications, setApplications] = useState<AdmissionApplication[]>(DEFAULT_APPLICATIONS);
   const [banners, setBanners] = useState<BannerSlide[]>(DEFAULT_BANNERS);
   const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(DEFAULT_SCHOOL_INFO);
+
+  // Dynamically synchronize app icon and PWA install manifest with whichever logo the admin provides
+  useDynamicAppIcon(schoolInfo.logoUrl);
 
   // Subscribe to Firestore database for real-time live sync across devices
   useEffect(() => {
@@ -169,20 +177,20 @@ export default function App() {
                 <div className="w-16 h-1 bg-amber-500 mx-auto mt-3 rounded-full"></div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
                 
                 {/* Feature 1: Admission */}
                 <div 
                   onClick={() => setView('admission')}
-                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-4 group"
+                  className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-3 group"
                 >
-                  <div className="mx-auto w-14 h-14 bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-300 rounded-2xl flex items-center justify-center group-hover:bg-blue-900 group-hover:text-white transition-colors duration-300">
-                    <GraduationCap size={28} />
+                  <div className="mx-auto w-12 h-12 bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-300 rounded-2xl flex items-center justify-center group-hover:bg-blue-900 group-hover:text-white transition-colors duration-300">
+                    <GraduationCap size={24} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-blue-950 dark:text-white">ভর্তির আবেদন</h4>
-                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-                      সহজ ও ঝঞ্ঝাটমুক্ত অনলাইন ভর্তি ফর্ম পূরণ এবং রসিদ সংগ্রহ করুন।
+                    <h4 className="text-base font-bold text-blue-950 dark:text-white">ভর্তির আবেদন</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      অনলাইন ভর্তি ফর্ম পূরণ এবং রসিদ সংগ্রহ করুন।
                     </p>
                   </div>
                   <span className="inline-block text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:underline">ফরম পূরণ করুন →</span>
@@ -191,15 +199,15 @@ export default function App() {
                 {/* Feature 2: Class Routine */}
                 <div 
                   onClick={() => setView('routines')}
-                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-4 group"
+                  className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-3 group"
                 >
-                  <div className="mx-auto w-14 h-14 bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 rounded-2xl flex items-center justify-center group-hover:bg-amber-500 group-hover:text-blue-950 transition-colors duration-300">
-                    <Clock size={28} />
+                  <div className="mx-auto w-12 h-12 bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 rounded-2xl flex items-center justify-center group-hover:bg-amber-500 group-hover:text-blue-950 transition-colors duration-300">
+                    <Clock size={24} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-blue-950 dark:text-white">ক্লাস রুটিন</h4>
-                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-                      সকল শ্রেণীর দৈনিক ক্লাস রুটিন দেখুন এবং প্রিন্ট কপি সংগ্রহ করুন।
+                    <h4 className="text-base font-bold text-blue-950 dark:text-white">ক্লাস রুটিন</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      দৈনিক ক্লাস রুটিন দেখুন বা ডকুমেন্ট দেখুন।
                     </p>
                   </div>
                   <span className="inline-block text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:underline">সময়সূচী দেখুন →</span>
@@ -208,32 +216,53 @@ export default function App() {
                 {/* Feature 3: Exam Routine */}
                 <div 
                   onClick={() => setView('routines')}
-                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-4 group"
+                  className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-3 group"
                 >
-                  <div className="mx-auto w-14 h-14 bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
-                    <CalendarDays size={28} />
+                  <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                    <CalendarDays size={24} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-blue-950 dark:text-white">পরীক্ষার রুটিন</h4>
-                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-                      অর্ধ-বার্ষিক ও বার্ষিক পরীক্ষার বিস্তারিত সময়সূচী ও কক্ষ নম্বর দেখুন।
+                    <h4 className="text-base font-bold text-blue-950 dark:text-white">পরীক্ষার রুটিন</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      পরীক্ষার বিস্তারিত সময়সূচী ও কক্ষ নম্বর দেখুন।
                     </p>
                   </div>
                   <span className="inline-block text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:underline">পরীক্ষা সূচী দেখুন →</span>
                 </div>
 
-                {/* Feature 4: School Info */}
+                {/* Feature 4: Study AI Tutor (Requested for study help) */}
                 <div 
-                  onClick={() => setView('school-info')}
-                  className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-4 group"
+                  onClick={() => setView('study-help')}
+                  className="bg-gradient-to-b from-indigo-50/90 to-white dark:from-indigo-950/40 dark:to-slate-900 p-5 rounded-2xl border-2 border-indigo-200 dark:border-indigo-800/80 shadow-sm hover:shadow-md hover:border-amber-400 dark:hover:border-amber-400 transition-all cursor-pointer text-center space-y-3 group relative"
                 >
-                  <div className="mx-auto w-14 h-14 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 rounded-2xl flex items-center justify-center group-hover:bg-purple-700 group-hover:text-white transition-colors duration-300">
-                    <School size={28} />
+                  <div className="absolute top-2 right-2 bg-amber-400 text-blue-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-xs">
+                    <Sparkles size={10} />
+                    <span>AI Tutor</span>
+                  </div>
+                  <div className="mx-auto w-12 h-12 bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-amber-400 rounded-2xl flex items-center justify-center group-hover:bg-indigo-900 group-hover:text-amber-300 transition-colors duration-300">
+                    <Bot size={24} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-bold text-blue-950 dark:text-white">স্কুল সম্পর্কিত তথ্য</h4>
-                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-                      স্কুলের গৌরবময় ইতিহাস, লক্ষ্য ও মিশন, এবং উন্নত সুযোগ-সুবিধা জানুন।
+                    <h4 className="text-base font-bold text-blue-950 dark:text-white">পড়াশোনায় সহায়তা</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      গণিত, ইংরেজি ও বাড়ির কাজে সার্বক্ষণিক শিক্ষাসহায়িকা।
+                    </p>
+                  </div>
+                  <span className="inline-block text-xs font-bold text-indigo-700 dark:text-amber-400 group-hover:underline">টিউটর শুরু করুন →</span>
+                </div>
+
+                {/* Feature 5: School Info */}
+                <div 
+                  onClick={() => setView('school-info')}
+                  className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer text-center space-y-3 group"
+                >
+                  <div className="mx-auto w-12 h-12 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 rounded-2xl flex items-center justify-center group-hover:bg-purple-700 group-hover:text-white transition-colors duration-300">
+                    <School size={24} />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-blue-950 dark:text-white">স্কুল পরিচিতি</h4>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      স্কুলের গৌরবময় ইতিহাস ও উন্নত সুযোগ-সুবিধা জানুন।
                     </p>
                   </div>
                   <span className="inline-block text-xs font-bold text-blue-900 dark:text-amber-400 group-hover:underline">পরিচিতি দেখুন →</span>
@@ -327,6 +356,25 @@ export default function App() {
           />
         )}
 
+        {/* Study Help / AI Tutor View */}
+        {currentView === 'study-help' && (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center space-x-2 bg-indigo-100 dark:bg-indigo-950/70 text-indigo-900 dark:text-amber-300 px-4 py-1.5 rounded-full text-xs font-bold mb-3 border border-indigo-200 dark:border-indigo-800">
+                <Sparkles size={14} className="text-amber-500 animate-spin-slow" />
+                <span>Gemini 3.8 Flash দ্বারা পরিচালিত ২৪/৭ আদর্শ শিক্ষাসহায়িকা</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-blue-950 dark:text-amber-400 font-sans">
+                আদর্শ শিক্ষাসহায়িকা (AI Study Tutor)
+              </h2>
+              <p className="text-gray-600 dark:text-slate-400 text-xs sm:text-sm max-w-2xl mx-auto mt-2 leading-relaxed">
+                কোমলমতি শিক্ষার্থীদের পড়ালেখা, প্রাথমিক গণিত সমাধান, ইংরেজি গ্রামার, বানান, বাংলা ব্যাকরণ ও বাড়ির কাজে সার্বক্ষণিক আনন্দদায়ক সহায়তার জন্য নিচে প্রশ্ন লিখুন।
+              </p>
+            </div>
+            <StudyChatbot isFullPage={true} />
+          </section>
+        )}
+
         {/* School Info View */}
         {currentView === 'school-info' && (
           <AboutSchool info={schoolInfo} classes={CLASSES} />
@@ -355,6 +403,14 @@ export default function App() {
 
       {/* Footer */}
       <Footer info={schoolInfo} />
+
+      {/* Floating Study Assistant Widget */}
+      <StudyFloatingWidget 
+        onOpenFullPage={() => {
+          setView('study-help');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }} 
+      />
 
       {/* Offline Connectivity Status Toast */}
       <OfflineIndicator />

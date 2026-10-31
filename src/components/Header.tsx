@@ -44,6 +44,7 @@ export default function Header({
     { id: 'notice-board', label: 'নোটিশ বোর্ড' },
     { id: 'admission', label: 'ভর্তির আবেদন' },
     { id: 'routines', label: 'রুটিন সমূহ' },
+    { id: 'study-help', label: 'পড়াশোনায় সহায়তা' },
     { id: 'school-info', label: 'স্কুল পরিচিতি' },
     { id: 'contact', label: 'যোগাযোগ' },
   ];
@@ -114,6 +115,7 @@ export default function Header({
     ? navItems.filter(item => 
         item.label.toLowerCase().includes(query) ||
         (item.id === 'admission' && ('ভর্তি আবেদন ফরম ফি টাকা প্লে নার্সারি প্রাইমারি হাইস্কুল').includes(query)) ||
+        (item.id === 'study-help' && ('পড়া পড়াশোনা টিউটর হোমওয়ার্ক গৃহশিক্ষক অংক গণিত ইংরেজি বাংলা সাহায্য চ্যাটবট এআই ai study tutor').includes(query)) ||
         (item.id === 'school-info' && ('ইতিহাস মিশন ভিশন কানন শিক্ষক বর্ণনা পরিচালনা তথ্য').includes(query)) ||
         (item.id === 'contact' && ('যোগাযোগ ঠিকানা ফোন ইমেইল মানচিত্র লোকেশন').includes(query))
       )
@@ -350,13 +352,16 @@ export default function Header({
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer flex items-center space-x-1 ${
                   currentView === item.id
                     ? 'bg-amber-500 text-blue-950 shadow-sm'
+                    : item.id === 'study-help'
+                    ? 'bg-indigo-950/70 text-amber-300 hover:bg-indigo-900 border border-amber-400/30 hover:text-white'
                     : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                 }`}
               >
-                {item.label}
+                {item.id === 'study-help' && <Sparkles size={14} className="text-amber-400" />}
+                <span>{item.label}</span>
               </button>
             ))}
 

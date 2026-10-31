@@ -25,9 +25,42 @@
     <link rel="manifest" href="/manifest.webmanifest" />
 
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <link rel="alternate icon" type="image/png" href="/pwa-192x192.png" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+    <link id="app-favicon" rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link id="app-alternate-icon" rel="alternate icon" type="image/png" href="/pwa-192x192.png" />
+    <link id="app-shortcut-icon" rel="shortcut icon" href="/favicon.ico" />
+
+    <!-- Immediate dynamic icon synchronization from cached settings -->
+    <script>
+      (function() {
+        try {
+          var cachedIcons = localStorage.getItem('adarsha_dynamic_icons_cache_v2');
+          var iconUrl = null;
+          if (cachedIcons) {
+            var parsed = JSON.parse(cachedIcons);
+            if (parsed && parsed.icons && parsed.icons.icon192) {
+              iconUrl = parsed.icons.icon192;
+            }
+          }
+          if (!iconUrl) {
+            var schoolInfo = localStorage.getItem('adarsha_school_info_v2');
+            if (schoolInfo) {
+              var sObj = JSON.parse(schoolInfo);
+              if (sObj && sObj.logoUrl) {
+                iconUrl = sObj.logoUrl;
+              }
+            }
+          }
+          if (iconUrl) {
+            var fav = document.getElementById('app-favicon');
+            if (fav) { fav.href = iconUrl; fav.type = 'image/png'; }
+            var apple = document.querySelector("link[rel='apple-touch-icon']");
+            if (apple) { apple.href = iconUrl; }
+            var shortcut = document.getElementById('app-shortcut-icon');
+            if (shortcut) { shortcut.href = iconUrl; }
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body class="antialiased selection:bg-blue-900 selection:text-white">
     <div id="root"></div>

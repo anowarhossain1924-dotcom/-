@@ -84,3 +84,15 @@ export interface SchoolInfo {
   address: string;
   logoUrl?: string;
 }
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  timestamp: string;
+  isError?: boolean;
+}
+
+export type StudyGrade = 'প্লে' | 'নার্সারি' | 'কেজি' | '১ম শ্রেণি' | '২য় শ্রেণি' | '৩য় শ্রেণি' | '৪র্থ শ্রেণি' | '৫ম শ্রেণি';
+
+export type StudySubject = 'বাংলা' | 'ইংরেজি (English)' | 'প্রাথমিক গণিত' | 'প্রাথমিক বিজ্ঞান' | 'বাংলাদেশ ও বিশ্বপরিচয়' | 'ইসলাম ও নৈতিক শিক্ষা' | 'সাধারণ জ্ঞান ও কুইজ' | 'দৈনিক পড়ার রুটিন ও টিপস';

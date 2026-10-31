@@ -36,7 +36,10 @@ import {
   Filter,
   FileCheck,
   BookOpen,
-  Calendar
+  Calendar,
+  Smartphone,
+  Globe,
+  Laptop
 } from 'lucide-react';
 import Logo from './Logo';
 import { 
@@ -169,6 +172,7 @@ export default function AdminPanel({
 
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -686,17 +690,37 @@ export default function AdminPanel({
   const handleLogoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = await uploadImageToSupabaseStorage(file, 'logo');
-      const updatedInfo = { ...schoolInfo, logoUrl: url };
-      setSchoolInfo(updatedInfo);
-      saveSchoolInfoToSupabase(updatedInfo);
+      setIsUploadingLogo(true);
+      try {
+        const url = await uploadImageToSupabaseStorage(file, 'logo');
+        const updatedInfo = { ...schoolInfo, logoUrl: url };
+        setSchoolInfo(updatedInfo);
+        await saveSchoolInfoToSupabase(updatedInfo);
+        setSaveSuccessMsg('লোগো সফলভাবে আপলোড হয়েছে এবং ওয়েবসাইট ও অ্যাপের আইকন হিসেবে সক্রিয় করা হয়েছে!');
+        setTimeout(() => setSaveSuccessMsg(''), 4500);
+      } catch (err) {
+        console.error('Logo upload error:', err);
+      } finally {
+        setIsUploadingLogo(false);
+      }
     }
   };
 
-  const resetToDefaultLogo = () => {
+  const handleApplyLogoUrl = async (customUrl: string) => {
+    const cleanUrl = customUrl.trim();
+    const updatedInfo = { ...schoolInfo, logoUrl: cleanUrl };
+    setSchoolInfo(updatedInfo);
+    await saveSchoolInfoToSupabase(updatedInfo);
+    setSaveSuccessMsg('লোগো ইউআরএল সফলভাবে সক্রিয় হয়েছে এবং অ্যাপ আইকনে যুক্ত করা হয়েছে!');
+    setTimeout(() => setSaveSuccessMsg(''), 4500);
+  };
+
+  const resetToDefaultLogo = async () => {
     const updatedInfo = { ...schoolInfo, logoUrl: '' };
     setSchoolInfo(updatedInfo);
-    saveSchoolInfoToSupabase(updatedInfo);
+    await saveSchoolInfoToSupabase(updatedInfo);
+    setSaveSuccessMsg('ডিফল্ট স্কুল লোগো ও অ্যাপ আইকন সফলভাবে ফিরিয়ে আনা হয়েছে!');
+    setTimeout(() => setSaveSuccessMsg(''), 4500);
   };
 
   const handleAddBanner = (e: React.FormEvent) => {
@@ -2206,69 +2230,186 @@ export default function AdminPanel({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* Logo Management Section */}
-            <div className="md:col-span-2 p-5 bg-blue-50/80 rounded-2xl border border-blue-200/80 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center space-x-2 text-blue-950">
-                  <Image size={22} className="text-blue-700" />
-                  <h5 className="font-extrabold text-base sm:text-lg">ওয়েবসাইট লোগো পরিবর্তন ও আপলোড (Website Logo Management)</h5>
+            {/* Logo & Dynamic App Icon Management Section */}
+            <div className="md:col-span-2 p-5 sm:p-6 bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-amber-50/40 rounded-2xl border border-blue-200/90 shadow-sm space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center space-x-2.5 text-blue-950">
+                  <div className="p-2 bg-blue-600 text-white rounded-xl shadow-sm">
+                    <Smartphone size={22} />
+                  </div>
+                  <div>
+                    <h5 className="font-extrabold text-base sm:text-lg">
+                      ওয়েবসাইট ও অ্যাপের আইকন ব্যবস্থাপনা (App Icon & Logo Management)
+                    </h5>
+                    <p className="text-xs text-blue-900/70 font-medium">
+                      এডমিন যে লোগো দিবেন, মোবাইল ও ডেস্কটপে ইনস্টল করা অ্যাপের আইকনেও সেই লোগো দেখাবে
+                    </p>
+                  </div>
                 </div>
                 {schoolInfo.logoUrl && (
                   <button
                     type="button"
                     onClick={resetToDefaultLogo}
-                    className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer self-start sm:self-auto"
+                    className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg font-bold transition-colors cursor-pointer self-start sm:self-auto flex items-center gap-1.5"
                   >
-                    ডিফল্ট লোগোতে ফিরে যান
+                    <Trash2 size={13} />
+                    <span>ডিফল্ট লোগোতে ফিরে যান</span>
                   </button>
                 )}
               </div>
               
-              <p className="text-xs text-gray-600 leading-relaxed">
-                অ্যাডমিন হিসেবে আপনি ডিভাইস থেকে যেকোনো কাস্টম লোগো আপলোড করতে পারেন। আপলোডকৃত লোগোটি Supabase Storage-এ সংরক্ষিত হবে এবং ওয়েবসাইটের হেডার ও ফুটারে সাথে সাথে রিয়েল-টাইমে আপডেট হয়ে স্থায়ী থাকবে।
-              </p>
+              <div className="p-3.5 bg-blue-900 text-white rounded-xl text-xs space-y-1 shadow-inner">
+                <div className="flex items-center gap-2 font-bold text-amber-300">
+                  <Sparkles size={15} className="shrink-0" />
+                  <span>রিয়েল-টাইম অ্যাপ আইকন প্রযুক্তি (Real-Time App Icon Sync)</span>
+                </div>
+                <p className="text-blue-100/90 leading-relaxed text-[11px] sm:text-xs">
+                  এখানে যেকোনো ইমেজ আপলোড বা লিংক দিলে স্বয়ংক্রিয়ভাবে ১৯২×১৯২ ও ৫১২×৫১২ হাই-রেজুলেশন আইকন এবং মাস্কেবল পিএনজি (Maskable PNG) তৈরি হবে। ফলে ব্রাউজার ট্যাব, বুকমার্ক এবং অ্যান্ড্রয়েড/পিসি হোমস্ক্রিনে ইনস্টল করার পর অ্যাপ আইকনে আপনার দেওয়া লোগোটিই প্রদর্শিত হবে।
+                </p>
+              </div>
 
-              <div className="flex flex-col md:flex-row items-center gap-6 bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
-                <div className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-xl shrink-0">
-                  <span className="text-[11px] font-bold text-gray-500 mb-2">বর্তমান ওয়েবসাইট লোগো প্রিভিউ</span>
-                  {schoolInfo.logoUrl && schoolInfo.logoUrl.trim() !== '' ? (
-                    <div className="bg-white p-2 rounded-full shadow-md ring-2 ring-amber-400">
-                      <Logo size={70} logoUrl={schoolInfo.logoUrl} />
+              {/* 4-way Live App Icon Preview */}
+              <div>
+                <span className="block text-xs font-bold text-slate-700 mb-2.5">
+                  লাইভ প্রিভিউ: বিভিন্ন ডিভাইসে আপনার অ্যাপ আইকন যেভাবে দেখাবে
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  
+                  {/* Preview 1: Website Header Emblem */}
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col items-center text-center justify-between">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase mb-2">১. ওয়েবসাইট হেডার</span>
+                    <div className="w-14 h-14 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center p-1 shadow-xs my-auto">
+                      <Logo size={48} logoUrl={schoolInfo.logoUrl} />
                     </div>
-                  ) : (
-                    <span className="text-xs text-gray-400 italic">লোগো নেই</span>
-                  )}
+                    <span className="text-[11px] font-semibold text-slate-700 mt-2">ওয়েব পেজ লোগো</span>
+                  </div>
+
+                  {/* Preview 2: Browser Tab / Favicon */}
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col items-center text-center justify-between">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase mb-2">২. ব্রাউজার ট্যাব</span>
+                    <div className="w-full bg-slate-100 rounded-lg p-1.5 border border-slate-300/80 my-auto shadow-inner">
+                      <div className="bg-white rounded px-2 py-1 flex items-center space-x-1.5 shadow-xs max-w-[130px] mx-auto overflow-hidden">
+                        <img 
+                          src={schoolInfo.logoUrl && schoolInfo.logoUrl.trim() !== '' ? schoolInfo.logoUrl : '/icon.svg'} 
+                          alt="tab-icon" 
+                          className="w-4 h-4 rounded-full shrink-0 object-contain"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/icon.svg'; }}
+                        />
+                        <span className="text-[9px] font-bold text-slate-800 truncate">আদর্শ শিশু কানন</span>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-semibold text-slate-700 mt-2">ট্যাব ফেভআইকন</span>
+                  </div>
+
+                  {/* Preview 3: Android App Icon (The key user request!) */}
+                  <div className="bg-white p-3.5 rounded-xl border border-blue-300 ring-2 ring-blue-500/20 shadow-xs flex flex-col items-center text-center justify-between">
+                    <span className="text-[10px] font-bold text-blue-800 uppercase mb-2">৩. অ্যান্ড্রয়েড অ্যাপ</span>
+                    <div className="my-auto flex flex-col items-center">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-b from-blue-900 to-blue-950 p-1.5 shadow-md border-2 border-amber-400 flex items-center justify-center transform hover:scale-105 transition-transform">
+                        <img 
+                          src={schoolInfo.logoUrl && schoolInfo.logoUrl.trim() !== '' ? schoolInfo.logoUrl : '/icon.svg'} 
+                          alt="app-icon" 
+                          className="w-full h-full object-contain rounded-xl"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/icon.svg'; }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-extrabold text-blue-950 mt-1.5 leading-tight">আদর্শ শিশু কানন...</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded mt-1">মোবাইল ইনস্টল</span>
+                  </div>
+
+                  {/* Preview 4: Desktop Taskbar / PC App */}
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs flex flex-col items-center text-center justify-between">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase mb-2">৪. ডেস্কটপ টাস্কবার</span>
+                    <div className="w-full bg-slate-900 rounded-lg p-2 flex items-center justify-center gap-2 my-auto shadow-inner">
+                      <div className="w-8 h-8 rounded-lg bg-blue-800/80 p-1 flex items-center justify-center border border-amber-400/80">
+                        <img 
+                          src={schoolInfo.logoUrl && schoolInfo.logoUrl.trim() !== '' ? schoolInfo.logoUrl : '/icon.svg'} 
+                          alt="desktop-icon" 
+                          className="w-full h-full object-contain rounded"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/icon.svg'; }}
+                        />
+                      </div>
+                      <span className="text-[9px] font-bold text-white truncate hidden sm:inline">আদর্শ শিশু কানন</span>
+                    </div>
+                    <span className="text-[11px] font-semibold text-slate-700 mt-2">পিসি অ্যাপ্লিকেশন</span>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Upload & URL Controls */}
+              <div className="bg-white p-4 sm:p-5 rounded-xl border border-blue-100 shadow-xs space-y-4">
+                
+                {/* File Upload Button */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                    ডিভাইস থেকে নতুন লোগো আপলোড করুন (Upload Image File from Device)
+                  </label>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <label className={`flex-1 flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl border-2 border-dashed ${isUploadingLogo ? 'border-amber-400 bg-amber-50/50 cursor-wait' : 'border-blue-300 hover:border-blue-500 bg-blue-50/40 hover:bg-blue-50 cursor-pointer'} transition-all text-xs font-bold text-blue-900`}>
+                      {isUploadingLogo ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin text-amber-600" />
+                          <span>লোগো আপলোড ও অ্যাপ আইকন তৈরি হচ্ছে...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud size={20} className="text-blue-700" />
+                          <span>কম্পিউটার বা মোবাইল থেকে ইমেজ ফাইল নির্বাচন করুন (PNG, JPG, SVG, WebP)</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploadingLogo}
+                        onChange={handleLogoImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
 
-                <div className="flex-1 space-y-3 w-full">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">ডিভাইস থেকে লোগো আপলোড করুন (Upload Image File)</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoImageUpload}
-                      className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-900 file:text-white hover:file:bg-blue-800 cursor-pointer"
-                    />
-                  </div>
+                <div className="relative flex items-center">
+                  <div className="flex-grow border-t border-gray-200"></div>
+                  <span className="flex-shrink mx-2 text-[10px] font-bold text-gray-400 uppercase">অথবা সরাসরি ইমেজের URL দিয়ে সেট করুন</span>
+                  <div className="flex-grow border-t border-gray-200"></div>
+                </div>
 
-                  <div className="relative flex items-center">
-                    <div className="flex-grow border-t border-gray-200"></div>
-                    <span className="flex-shrink mx-2 text-[10px] font-bold text-gray-400 uppercase">অথবা সরাসরি ইমেজের URL দিন</span>
-                    <div className="flex-grow border-t border-gray-200"></div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">লোগো ইমেজের লিঙ্ক (Logo Image URL)</label>
+                {/* Direct Image URL */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">লোগো ইমেজের লিঙ্ক (Logo Image URL)</label>
+                  <div className="flex gap-2">
                     <input
                       type="text"
                       name="logoUrl"
                       value={schoolInfo.logoUrl || ''}
                       onChange={handleSettingsChange}
-                      placeholder="https://example.com/logo.png"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white font-mono focus:ring-blue-500"
+                      placeholder="https://example.com/school-logo.png"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-xs bg-white font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
+                    {schoolInfo.logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => handleApplyLogoUrl(schoolInfo.logoUrl || '')}
+                        className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold rounded-lg transition shrink-0 cursor-pointer shadow-xs"
+                      >
+                        প্রয়োগ করুন
+                      </button>
+                    )}
                   </div>
                 </div>
+
+                {/* Status indicator */}
+                <div className="flex items-center gap-2 pt-1 text-[11px] text-emerald-700 font-semibold">
+                  <CheckCircle size={14} className="text-emerald-600 shrink-0" />
+                  <span>
+                    {schoolInfo.logoUrl && schoolInfo.logoUrl.trim() !== '' 
+                      ? 'অ্যাডমিনের প্রদত্ত কাস্টম লোগো বর্তমানে অ্যাপ আইকন ও ওয়েবসাইটে সক্রিয় আছে।'
+                      : 'বর্তমানে স্কুলের ডিফল্ট অফিসিয়াল ভেক্টর লোগো সক্রিয় আছে।'}
+                  </span>
+                </div>
+
               </div>
             </div>
 
